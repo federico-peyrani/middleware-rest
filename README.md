@@ -8,6 +8,8 @@ requests to the static pages and the API endpoints respectively.
 Launch the `main` method in the `Main` class, for the time being, the system stores all the information in primary 
 storage only, meaning that any information about users and uploaded images is lost once the JVM is stopped.
 
+Connect to <http://localhost:4567/login> with a browser to test the functionalities of the system.
+
 ## More info
 
 Breakdown of the API endpoints: <https://app.swaggerhub.com/apis-docs/federico-peyrani/middleware-technologies>
