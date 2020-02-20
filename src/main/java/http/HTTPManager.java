@@ -1,11 +1,10 @@
 package http;
 
+import api.oauth.Token;
 import engine.FreeMarkerEngine;
 import org.jetbrains.annotations.NotNull;
-import session.SessionConstants;
 import spark.Request;
 import spark.Response;
-import storage.StorageInterface;
 import storage.User;
 
 import java.util.HashMap;
@@ -20,6 +19,8 @@ public class HTTPManager {
     public static final String PAGE_LOGIN = "/login";
     public static final String PAGE_PROTECTED_USER = "/protected/user";
 
+    public static final String SESSION_TOKEN = "token";
+
     private static final HTTPManager instance = new HTTPManager();
 
     private final FreeMarkerEngine engine = new FreeMarkerEngine(FreeMarkerEngine.createDefaultConfiguration());
@@ -31,21 +32,17 @@ public class HTTPManager {
         return instance;
     }
 
-    private void buildUserModel(@NotNull Map<String, Object> model, @NotNull User user) {
-        model.put("username", user.getUsername());
-        model.put("images", user.getImages());
-    }
-
     private void handleProtected(Request request, Response response) {
-        if (request.session().isNew() || request.session().attribute(SessionConstants.USER) == null) {
+        if (request.session().isNew() || request.session().attribute(SESSION_TOKEN) == null) {
             response.redirect(PAGE_LOGIN);
+            halt(302); // redirect
         }
     }
 
     private Object handlePageLogin(Request request, Response response) {
 
         request.session(true);
-        if (request.session().attribute(SessionConstants.USER) != null) {
+        if (request.session().attribute(SESSION_TOKEN) != null) {
             response.redirect(PAGE_PROTECTED_USER);
             return null;
         }
@@ -57,33 +54,16 @@ public class HTTPManager {
 
     private Object handlePageUser(Request request, Response response) {
 
-        @NotNull User user = request.session().attribute(SessionConstants.USER);
+        @NotNull Token token = request.session().attribute(SESSION_TOKEN);
+        User user = token.user;
 
         Map<String, Object> model = new HashMap<>();
-        buildUserModel(model, user);
+        model.put("username", user.getUsername());
+        model.put("token", token.uuid);
 
         response.status(200);
         response.type("text/html");
         return engine.render(model, "user.ftl");
-    }
-
-    /**
-     * Called when the storage manager raises an exception, due to either the username already existing in the system,
-     * or an invalid login attempt.
-     *
-     * @param e        the {@link storage.StorageInterface.AuthenticationException} thrown by {@link StorageInterface}
-     * @param request  the {@link Request}
-     * @param response the {@link Response}
-     */
-    private void handleAuthenticationException(StorageInterface.AuthenticationException e,
-                                               Request request, Response response) {
-
-        Map<String, Object> model = new HashMap<>();
-        model.put("errorMessage", e.getMessage().toLowerCase());
-
-        response.status(200);
-        response.type("text/html");
-        response.body(engine.render(model, "login.ftl"));
     }
 
     public void init() {
@@ -92,8 +72,6 @@ public class HTTPManager {
 
         get(PAGE_LOGIN, this::handlePageLogin);
         get(PAGE_PROTECTED_USER, this::handlePageUser);
-
-        exception(StorageInterface.AuthenticationException.class, this::handleAuthenticationException);
     }
 
 }
