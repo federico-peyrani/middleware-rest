@@ -18,6 +18,12 @@ public class Image {
         this.url = UUID.randomUUID().toString();
     }
 
+    public Image(byte[] raw, String filename, String url) {
+        this.raw = raw;
+        this.filename = filename;
+        this.url = url;
+    }
+
     public static Image fromInputStream(InputStream inputStream, String filename) throws IOException {
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
