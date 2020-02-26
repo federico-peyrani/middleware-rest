@@ -5,11 +5,18 @@ requests to the static pages and the API endpoints respectively.
 
 ## Getting started
 
-Launch the `main` method in the `Main` class, for the time being, the system stores all the information in primary 
-storage only, meaning that any information about users and uploaded images is lost once the JVM is stopped.
+Launch the `main` method in the `Main` class. If you want to use an external database to permanently store the information
+of the system (created users and images), pass as the only argument the absolute path to the SQL database to user.
+If no argument is passed, the application will store all the information in primary storage only, meaning that any information 
+about users and uploaded images is lost once the JVM is stopped.
 
 Connect to <http://localhost:4567/login> with a browser to test the functionalities of the system.
 
-## More info
+## API endpoints
 
 Breakdown of the API endpoints: <https://app.swaggerhub.com/apis-docs/federico-peyrani/middleware-technologies>
+
+## SQL Database
+
+The application will automatically create the necessary tables upon startup, so no further action is needed beside the
+creation of the database file itself.
