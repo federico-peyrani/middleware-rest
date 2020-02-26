@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
 
     <style>
 
@@ -18,8 +19,21 @@
             height: 100vh;
         }
 
-        .my-masonry-image-list {
-            column-count: 4;
+        .mdc-top-app-bar--fixed-adjust {
+            width: 100%;
+        }
+
+        #container {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 2px dashed rgba(0, 0, 0, 0);
+            box-sizing: border-box;
+        }
+
+        .mdc-image-list--masonry-js .mdc-image-list__item {
+            /* calc((100% / $column-count) - (($gutterpx * ($column-count - 1)) / $column-count)) */
+            width: calc((100% / 5) - ((16px * 4) / 5));
+            margin: 0 0 16px;
         }
 
     </style>
@@ -43,54 +57,64 @@
 
 <div class="mdc-top-app-bar--fixed-adjust">
 
-    <form action="${statics["api.APIManager"].API_PROTECTED_UPLOAD}" method="post" enctype="multipart/form-data">
+    <form enctype="multipart/form-data">
         <label for="img">Select image:</label>
         <input type="file" id="img" name="img" accept="image/*">
     </form>
 
     <button onclick="onSubmit()"></button>
 
-    <ul id="image-list" class="mdc-image-list mdc-image-list--masonry my-masonry-image-list"></ul>
+    <div id="container">
+        <ul id="image-list" class="mdc-image-list mdc-image-list--masonry-js"></ul>
+    </div>
 
 </div>
 
 </body>
 <script type="text/javascript">
 
-    let token = '${token}';
-    let oauth = '?${statics["api.APIManager"].REQUEST_PARAM_OAUTH}=';
+    const oauth = '?${statics["api.APIManager"].REQUEST_PARAM_OAUTH}=${token}';
 
-    function onSubmit() {
-        let img = document.getElementById("img").files[0];
-        let formData = new FormData();
-        formData.append("img", img);
-        fetch('${statics["api.APIManager"].API_PROTECTED_UPLOAD}' + oauth + token, {method: "POST", body: formData})
-            .then(res => res.json())
-            .then(out => {
-                const li = document.createElement("li");
-                const img = document.createElement("img");
-                li.className = 'mdc-image-list__item';
-                img.className = 'mdc-image-list__image';
-                img.src = '${statics["api.APIManager"].API_PROTECTED_IMAGE}/' + out.url + oauth + token;
-                li.appendChild(img);
-                imageList.appendChild(li);
-            });
+    const imageListUrl = '${statics["api.APIManager"].API_PROTECTED_IMAGES}' + oauth;
+    const imageList = document.getElementById("image-list");
+
+    new Masonry(imageList, {
+        columnWidth: '.mdc-image-list__item',
+        itemSelector: '.mdc-image-list__item',
+        percentPosition: true,
+        gutter: 16,
+        horizontalOrder: true,
+    });
+
+    function appendImage(url) {
+        const li = document.createElement("li");
+        const img = document.createElement("img");
+        li.className = 'mdc-image-list__item';
+        img.className = 'mdc-image-list__image';
+        img.src = url;
+        li.appendChild(img);
+        imageList.appendChild(li);
     }
 
-    const imageListUrl = '${statics["api.APIManager"].API_PROTECTED_IMAGES}' + oauth + token;
-    const imageList = document.getElementById("image-list");
+    function onSubmit() {
+
+        let img = document.getElementById("img").files[0];
+        let formData = new FormData();
+
+        formData.append("img", img);
+
+        fetch('${statics["api.APIManager"].API_PROTECTED_UPLOAD}' + oauth, {method: "POST", body: formData})
+            .then(res => res.json())
+            .then(out => {
+                appendImage('${statics["api.APIManager"].API_PROTECTED_IMAGE}/' + out.url + oauth);
+            });
+    }
 
     fetch(imageListUrl)
         .then(res => res.json())
         .then(out => {
             for (const image of out) {
-                const li = document.createElement("li");
-                const img = document.createElement("img");
-                li.className = 'mdc-image-list__item';
-                img.className = 'mdc-image-list__image';
-                img.src = '${statics["api.APIManager"].API_PROTECTED_IMAGE}/' + image.url + oauth + token;
-                li.appendChild(img);
-                imageList.appendChild(li);
+                appendImage('${statics["api.APIManager"].API_PROTECTED_IMAGE}/' + image.url + oauth);
             }
         });
 
