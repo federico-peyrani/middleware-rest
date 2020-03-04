@@ -38,7 +38,16 @@ public class Token {
 
     public enum Privilege {
 
-        INFO, READ, UPLOAD(READ), DELETE(READ, UPLOAD);
+        /** Permission to get infos about the user. */
+        INFO,
+        /** Permission to get access to the pictures of the user. */
+        READ,
+        /** Permission to upload new pictures to the user's space. */
+        UPLOAD(READ),
+        /** Permission to delete pictures from the user's space. */
+        DELETE(READ, UPLOAD),
+        /** Permission to carry out every operation on the user's space, as well as creating new access tokens. */
+        MASTER(INFO, READ, UPLOAD, DELETE);
 
         private Privilege[] included;
 

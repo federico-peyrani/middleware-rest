@@ -1,16 +1,22 @@
 package storage;
 
+import api.APIManager;
+import api.resources.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
+@Resource(self = APIManager.API_PROTECTED_USER + "?oauth={oauth}", templated = true)
 public interface User {
 
-    @NotNull String getUsername();
+    @NotNull
+    @Resource.Property(key = "username")
+    String getUsername();
 
-    @NotNull String getPassword();
+    @NotNull
+    String getPassword();
 
-    @NotNull List<Image> getImages();
+    @NotNull
+    @Resource.Property(key = "images", external = true)
+    ImageList getImages();
 
     void addImage(@NotNull Image image);
 

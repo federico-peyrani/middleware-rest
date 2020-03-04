@@ -4,10 +4,10 @@ import org.jetbrains.annotations.NotNull;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import storage.Image;
+import storage.ImageList;
 import storage.User;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +53,7 @@ class UserSQL implements User {
 
     @NotNull
     @Override
-    public List<Image> getImages() {
+    public ImageList getImages() {
 
         String query = "SELECT *" + "\n" +
                 "FROM " + DataAccessSQL.TABLE_IMAGES + "\n" +
@@ -67,19 +67,19 @@ class UserSQL implements User {
                     .executeAndFetchTable() // potentially throws NullPointerException if there are no images
                     .asList();
 
-            List<Image> images = new ArrayList<>();
+            ImageList images = new ImageList(new ArrayList<>());
             for (Map<String, Object> row : rows) {
                 byte[] blob = (byte[]) row.get("raw");
                 String filename = (String) row.get("filename");
                 String url = (String) row.get("url");
                 Image image = new Image(blob, filename, url);
-                images.add(image);
+                images.list.add(image);
             }
 
             return images;
 
         } catch (NullPointerException e) {
-            return Collections.emptyList();
+            return ImageList.emptyList();
         }
     }
 
@@ -91,7 +91,7 @@ class UserSQL implements User {
 
         try (Connection con = sql2o.open()) {
             con.createQuery(query)
-                    .addParameter("url", image.getUrl())
+                    .addParameter("url", image.getId())
                     .addParameter("user_id", id)
                     .addParameter("raw", image.raw())
                     .addParameter("filename", image.getFilename())

@@ -2,9 +2,12 @@ package storage.implementation;
 
 import org.jetbrains.annotations.NotNull;
 import storage.Image;
+import storage.ImageList;
 import storage.User;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 class UserImpl implements User {
 
@@ -32,8 +35,8 @@ class UserImpl implements User {
 
     @NotNull
     @Override
-    public List<Image> getImages() {
-        return images;
+    public ImageList getImages() {
+        return new ImageList(images);
     }
 
     @Override
@@ -42,16 +45,16 @@ class UserImpl implements User {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(username);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserImpl user = (UserImpl) o;
         return username.equals(user.username);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(username);
     }
 
 }

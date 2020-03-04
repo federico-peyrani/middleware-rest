@@ -14,7 +14,7 @@ public final class DataAccessSQL implements StorageInterface {
     static final String TABLE_USERS = "users";
     static final String TABLE_IMAGES = "images";
 
-    private static final DataAccessSQL DATA_ACCESS_SQL = new DataAccessSQL();
+    private static final DataAccessSQL instance = new DataAccessSQL();
     private static Sql2o sql2o;
 
     private DataAccessSQL() {
@@ -28,7 +28,7 @@ public final class DataAccessSQL implements StorageInterface {
 
     public static DataAccessSQL connect() {
         if (sql2o == null) throw new Sql2oException("Database has not been opened yet");
-        return DATA_ACCESS_SQL;
+        return instance;
     }
 
     private static void createTables() {

@@ -1,27 +1,33 @@
 package storage;
 
+import api.APIManager;
+import api.resources.Resource;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.UUID;
 
+@Resource(self = APIManager.API_PROTECTED_IMAGE + "/{id}?oauth={oauth}", templated = true)
 public class Image {
 
     private final byte[] raw;
+    @Resource.Property(key = "filename")
     private final String filename;
-    private final String url;
+    @Resource.Property(key = "id")
+    private final String id;
 
     public Image(byte[] raw, String filename) {
         this.raw = raw;
         this.filename = filename;
-        this.url = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID().toString();
     }
 
-    public Image(byte[] raw, String filename, String url) {
+    public Image(byte[] raw, String filename, String id) {
         this.raw = raw;
         this.filename = filename;
-        this.url = url;
+        this.id = id;
     }
 
     public static Image fromInputStream(InputStream inputStream, String filename) throws IOException {
@@ -46,13 +52,13 @@ public class Image {
         return filename;
     }
 
-    public String getUrl() {
-        return url;
+    public String getId() {
+        return id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(url);
+        return Objects.hash(id);
     }
 
     @Override
@@ -60,7 +66,7 @@ public class Image {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Image image = (Image) o;
-        return Objects.equals(url, image.url);
+        return Objects.equals(id, image.id);
     }
 
 }

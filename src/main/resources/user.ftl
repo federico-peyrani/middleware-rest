@@ -73,7 +73,32 @@
 </body>
 <script type="text/javascript">
 
-    const oauth = '?${statics["api.APIManager"].REQUEST_PARAM_OAUTH}=${token}';
+    const Strings = {
+        create: (function () {
+            const regexp = /{([^{]+)}/g;
+            return function (str, o) {
+                return str.replace(regexp, function (ignore, key) {
+                    return (key = o[key]) == null ? '' : key;
+                });
+            }
+        })()
+    };
+
+    const oauth = '${token}';
+
+    fetch(Strings.create('${statics["api.APIManager"].API_PROTECTED_USER}?oauth={oauth}', {oauth: '${token}'}))
+        .then(res => res.json())
+        .then(out => {
+            const username = out._embedded.username;
+            const images = Strings.create(out._links.images.href, {oauth: '${token}'});
+            fetch(images)
+                .then(res => res.json())
+                .then(out => {
+                    for (const image of out._embedded.images) {
+                        appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));
+                    }
+                });
+        });
 
     const imageListUrl = '${statics["api.APIManager"].API_PROTECTED_IMAGES}' + oauth;
     const imageList = document.getElementById("image-list");
@@ -103,20 +128,12 @@
 
         formData.append("img", img);
 
-        fetch('${statics["api.APIManager"].API_PROTECTED_UPLOAD}' + oauth, {method: "POST", body: formData})
+        fetch('${statics["api.APIManager"].API_PROTECTED_UPLOAD}?oauth=' + oauth, {method: "POST", body: formData})
             .then(res => res.json())
-            .then(out => {
-                appendImage('${statics["api.APIManager"].API_PROTECTED_IMAGE}/' + out.url + oauth);
+            .then(image => {
+                appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));
             });
     }
-
-    fetch(imageListUrl)
-        .then(res => res.json())
-        .then(out => {
-            for (const image of out) {
-                appendImage('${statics["api.APIManager"].API_PROTECTED_IMAGE}/' + image.url + oauth);
-            }
-        });
 
 </script>
 </html>

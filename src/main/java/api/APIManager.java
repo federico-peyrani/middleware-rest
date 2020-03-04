@@ -2,9 +2,9 @@ package api;
 
 import api.oauth.OAUTHManager;
 import api.oauth.Token;
+import api.resources.ResourceObj;
 import http.HTTPManager;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
@@ -25,6 +25,7 @@ public class APIManager {
     public static final String API_PROTECTED = "/api/protected/*";
     public static final String API_LOGIN = "/api/login";
     public static final String API_SIGNUP = "/api/signup";
+    public static final String API_PROTECTED_USER = "/api/protected/user";
     public static final String API_PROTECTED_UPLOAD = "/api/protected/upload";
     public static final String API_PROTECTED_IMAGES = "/api/protected/images";
     public static final String API_PROTECTED_IMAGE = "/api/protected/image";
@@ -89,7 +90,7 @@ public class APIManager {
         }
 
         User user = userCreator.get(username, password);
-        Token token = new Token(user, Token.Privilege.DELETE);
+        Token token = new Token(user, Token.Privilege.MASTER);
         oauthManager.put(token);
 
         JSONObject json = new JSONObject()
@@ -129,6 +130,20 @@ public class APIManager {
         return authenticate(request, response, dataAccess::signup);
     }
 
+    private Object handleApiUser(Request request, Response response) throws IllegalAccessException {
+
+        Token token = request.attribute(REQUEST_ATTRIBUTE_TOKEN);
+        @NotNull User user = token.user;
+
+        if (!token.enables(Token.Privilege.INFO)) {
+            throw new IllegalAccessException("Authentication token does not have the rights to perform action");
+        }
+
+        response.status(201);
+        response.type("application/json");
+        return ResourceObj.build(User.class, user).toString();
+    }
+
     private Object handleApiUpload(Request request, Response response)
             throws IllegalAccessException, IOException, ServletException {
 
@@ -144,13 +159,9 @@ public class APIManager {
         Image image = Image.fromInputStream(filePart.getInputStream(), filePart.getSubmittedFileName());
         user.addImage(image);
 
-        JSONObject json = new JSONObject();
-        json.put("name", image.getFilename());
-        json.put("url", image.getUrl());
-
         response.status(201);
         response.type("application/json");
-        return json.toString();
+        return ResourceObj.build(image);
     }
 
     private Object handleApiImages(Request request, Response response) throws IllegalAccessException {
@@ -162,17 +173,9 @@ public class APIManager {
             throw new IllegalAccessException("Authentication token does not have the rights to perform action");
         }
 
-        JSONArray json = new JSONArray();
-        user.getImages().forEach(image -> {
-            JSONObject object = new JSONObject();
-            object.put("url", image.getUrl());
-            object.put("name", image.getFilename());
-            json.put(object);
-        });
-
         response.status(200);
         response.type("application/json");
-        return json.toString();
+        return ResourceObj.build(user.getImages()).toString();
     }
 
     private Object handleApiImage(Request request, Response response) throws IllegalAccessException {
@@ -190,8 +193,8 @@ public class APIManager {
             return "Malformed url";
         }
 
-        @NotNull Image image = user.getImages().stream()
-                .filter(img -> url.equals(img.getUrl()))
+        @NotNull Image image = user.getImages().list.stream()
+                .filter(img -> url.equals(img.getId()))
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);
 
@@ -207,6 +210,7 @@ public class APIManager {
 
         post(API_LOGIN, this::handleApiLogin);
         post(API_SIGNUP, this::handleApiSignup);
+        get(API_PROTECTED_USER, this::handleApiUser);
         post(API_PROTECTED_UPLOAD, this::handleApiUpload);
         get(API_PROTECTED_IMAGES, this::handleApiImages);
         get(API_PROTECTED_IMAGE_URL, this::handleApiImage);
