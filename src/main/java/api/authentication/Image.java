@@ -1,4 +1,4 @@
-package storage;
+package api.authentication;
 
 import api.APIManager;
 import api.resources.Resource;
@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.UUID;
 
-@Resource(self = APIManager.API_PROTECTED_IMAGE + "/{id}?oauth={oauth}", templated = true)
+@Resource(self = APIManager.API_PROTECTED_IMAGE + "/${id}?oauth={oauth}", templated = true)
 public class Image {
 
     private final byte[] raw;

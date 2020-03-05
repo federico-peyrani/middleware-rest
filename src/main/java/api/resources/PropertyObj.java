@@ -3,6 +3,7 @@ package api.resources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -12,6 +13,7 @@ class PropertyObj {
 
     final AccessibleObject accessibleObject;
     final Object value;
+    final Class<?> propertyClass;
     final Resource.Property annotation;
 
     PropertyObj(Object object, Method method) {
@@ -21,6 +23,7 @@ class PropertyObj {
         }
 
         this.accessibleObject = method;
+        this.propertyClass = method.getReturnType();
         this.annotation = method.getAnnotation(Resource.Property.class);
 
         try {
@@ -47,6 +50,7 @@ class PropertyObj {
         }
 
         this.accessibleObject = field;
+        this.propertyClass = field.getType();
         this.annotation = field.getAnnotation(Resource.Property.class);
 
         try {
@@ -65,8 +69,6 @@ class PropertyObj {
 
     void addToJSON(JSONObject links, JSONObject embedded) {
 
-        Class<?> propertyClass = value.getClass();
-
         if (annotation.external()) {
             links.put(annotation.key(), new ResourceObj(propertyClass, value)
                     .toJSON(false)
@@ -77,13 +79,15 @@ class PropertyObj {
 
         if (propertyClass.isAnnotationPresent(Resource.class)) {
             embedded.put(annotation.key(), new ResourceObj(propertyClass, value).toJSON());
-        } else if (propertyClass.isPrimitive() || propertyClass == String.class) {
-            embedded.put(annotation.key(), value);
         } else if (Iterable.class.isAssignableFrom(propertyClass)) {
             JSONArray array = new JSONArray();
             embedded.put(annotation.key(), array);
             Iterable<?> iterable = (Iterable<?>) value;
             iterable.forEach(it -> array.put(new ResourceObj(it.getClass(), it).toJSON()));
+        } else if (propertyClass.isPrimitive()
+                || Serializable.class.isAssignableFrom(propertyClass)
+                || propertyClass.isEnum()) {
+            embedded.put(annotation.key(), value);
         } else {
             throw new ResourceObj.SerializationException.NotAnnotatedException(propertyClass, Resource.class);
         }

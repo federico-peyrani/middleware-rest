@@ -1,15 +1,16 @@
-package storage.sql;
+package api.authentication.sql;
 
+import api.authentication.Image;
+import api.authentication.ImageList;
+import api.authentication.User;
 import org.jetbrains.annotations.NotNull;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
-import storage.Image;
-import storage.ImageList;
-import storage.User;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 class UserSQL implements User {
 
@@ -26,7 +27,7 @@ class UserSQL implements User {
     public String getUsername() {
 
         String query = "SELECT username" + "\n" +
-                "FROM " + DataAccessSQL.TABLE_USERS + "\n" +
+                "FROM " + AuthenticationSQL.TABLE_USERS + "\n" +
                 "WHERE id = :id";
 
         try (Connection con = sql2o.open()) {
@@ -41,7 +42,7 @@ class UserSQL implements User {
     public String getPassword() {
 
         String query = "SELECT password" + "\n" +
-                "FROM " + DataAccessSQL.TABLE_USERS + "\n" +
+                "FROM " + AuthenticationSQL.TABLE_USERS + "\n" +
                 "WHERE id = :id";
 
         try (Connection con = sql2o.open()) {
@@ -56,7 +57,7 @@ class UserSQL implements User {
     public ImageList getImages() {
 
         String query = "SELECT *" + "\n" +
-                "FROM " + DataAccessSQL.TABLE_IMAGES + "\n" +
+                "FROM " + AuthenticationSQL.TABLE_IMAGES + "\n" +
                 "WHERE user_id = :id";
 
         try (Connection con = sql2o.open()) {
@@ -86,7 +87,7 @@ class UserSQL implements User {
     @Override
     public void addImage(@NotNull Image image) {
 
-        String query = "INSERT INTO " + DataAccessSQL.TABLE_IMAGES + "(url, user_id, raw, filename)\n" +
+        String query = "INSERT INTO " + AuthenticationSQL.TABLE_IMAGES + "(url, user_id, raw, filename)\n" +
                 "VALUES(:url, :user_id, :raw, :filename)";
 
         try (Connection con = sql2o.open()) {
@@ -97,6 +98,19 @@ class UserSQL implements User {
                     .addParameter("filename", image.getFilename())
                     .executeUpdate();
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserSQL userSQL = (UserSQL) o;
+        return id == userSQL.id;
     }
 
 }

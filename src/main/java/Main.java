@@ -1,28 +1,28 @@
 import api.APIManager;
+import api.authentication.AuthenticationInterface;
+import api.authentication.implementation.AuthenticationImpl;
+import api.authentication.sql.AuthenticationSQL;
 import http.HTTPManager;
-import storage.StorageInterface;
-import storage.implementation.StorageImpl;
-import storage.sql.DataAccessSQL;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        final StorageInterface dataAccess;
+        final AuthenticationInterface authenticationInterface;
 
         if (args.length != 0) {
             // initialize the database and get the instance
-            DataAccessSQL.init(args[0]);
-            dataAccess = DataAccessSQL.connect();
+            AuthenticationSQL.init(args[0]);
+            authenticationInterface = AuthenticationSQL.connect();
         } else {
-            dataAccess = StorageImpl.getInstance();
+            authenticationInterface = AuthenticationImpl.getInstance();
         }
 
         HTTPManager httpManager = HTTPManager.getInstance();
         APIManager apiManager = APIManager.getInstance();
 
         httpManager.init();
-        apiManager.init(dataAccess);
+        apiManager.init(authenticationInterface);
     }
 
 }

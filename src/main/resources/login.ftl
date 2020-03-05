@@ -78,12 +78,12 @@
 
     <div>
 
-        <button class="mdc-button login-button" onclick="authenticate('${statics["api.APIManager"].API_LOGIN}')">
+        <button class="mdc-button login-button" onclick="authenticate('login')">
             <span class="mdc-button__ripple"></span>
             Login
         </button>
 
-        <button type="submit" onclick="authenticate('${statics["api.APIManager"].API_SIGNUP}')"
+        <button type="submit" onclick="authenticate('signup')"
                 class="mdc-button mdc-button--raised login-button">
             <span class="mdc-button__ripple"></span>
             Signup
@@ -96,24 +96,41 @@
 </body>
 <script type="text/javascript">
 
-    function authenticate(url) {
+    const Strings = {
+        create: (function () {
+            const regexp = /{([^{]+)}/g;
+            return function (str, o) {
+                return str.replace(regexp, function (ignore, key) {
+                    return (key = o[key]) == null ? '' : key;
+                });
+            }
+        })()
+    };
+
+    let url;
+    fetch('${statics["api.APIManager"].API_AUTHENTICATE}')
+        .then(res => res.json())
+        .then(out => {
+            url = out._links;
+        });
+
+    function authenticate(method) {
         let username = document.getElementById('username').value;
         let password = document.getElementById('password').value;
-        fetch(url + '?username=' + username + '&password=' + password, {method: "POST"})
+        fetch(Strings.create(url[method].href, {username: username, password: password}), {method: "POST"})
             .then(res => res.json())
             .then(out => {
-                if (out.status === '${statics["api.APIManager"].RESPONSE_STATUS_OK}') {
-                    window.location.pathname = '${statics["http.HTTPManager"].PAGE_PROTECTED_USER}'
+                if (out._embedded.status === '${statics["api.authentication.Token"].STATUS}') {
+                    localStorage.setItem('oauth', out._embedded.oauth);
+                    window.location.pathname = '${statics["http.HTTPManager"].PAGE_PROTECTED_USER}';
                 } else {
-                    document.getElementById('error_message').innerHTML = out.message;
+                    document.getElementById('error_message').innerHTML = out._embedded.message;
                 }
             });
     }
 
     const fields = document.querySelectorAll('.mdc-text-field');
     fields.forEach(textfield => mdc.textField.MDCTextField.attachTo(textfield));
-    const buttons = document.querySelectorAll('.mdc-button');
-    buttons.forEach(button => new MDCRipple(button));
 
 </script>
 </html>

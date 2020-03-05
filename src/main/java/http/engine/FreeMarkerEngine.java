@@ -1,4 +1,4 @@
-package engine;
+package http.engine;
 
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.beans.BeansWrapperBuilder;
@@ -15,10 +15,10 @@ import java.util.Map;
 
 public class FreeMarkerEngine extends TemplateEngine {
 
-    private Configuration configuration;
+    private final Configuration configuration;
 
-    private BeansWrapper w = new BeansWrapperBuilder(Configuration.VERSION_2_3_21).build();
-    private TemplateHashModel statics = w.getStaticModels();
+    private final BeansWrapper w = new BeansWrapperBuilder(Configuration.VERSION_2_3_21).build();
+    private final TemplateHashModel statics = w.getStaticModels();
 
     public FreeMarkerEngine(Configuration configuration) {
         this.configuration = configuration;

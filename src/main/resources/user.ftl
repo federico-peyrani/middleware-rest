@@ -4,7 +4,7 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
-    <title>Personal page - ${username}</title>
+    <title>Personal Page</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
@@ -45,7 +45,7 @@
     <div class="mdc-top-app-bar__row">
         <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
             <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button">menu</button>
-            <span class="mdc-top-app-bar__title">${username}</span>
+            <span id="username" class="mdc-top-app-bar__title"></span>
         </section>
         <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
             <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Download">
@@ -84,13 +84,16 @@
         })()
     };
 
-    const oauth = '${token}';
-
-    fetch(Strings.create('${statics["api.APIManager"].API_PROTECTED_USER}?oauth={oauth}', {oauth: '${token}'}))
+    const oauth = localStorage.getItem('oauth');
+    if (oauth == null) {
+        window.location.pathname = '/login';
+    }
+    fetch(Strings.create('${statics["api.APIManager"].API_PROTECTED_USER}?oauth={oauth}', {oauth: oauth}))
         .then(res => res.json())
         .then(out => {
-            const username = out._embedded.username;
-            const images = Strings.create(out._links.images.href, {oauth: '${token}'});
+            document.getElementById('username').innerText = out._embedded.username;
+            document.title = 'Personal Page - ' + out._embedded.username;
+            const images = Strings.create(out._links.images.href, {oauth: oauth});
             fetch(images)
                 .then(res => res.json())
                 .then(out => {
@@ -100,7 +103,6 @@
                 });
         });
 
-    const imageListUrl = '${statics["api.APIManager"].API_PROTECTED_IMAGES}' + oauth;
     const imageList = document.getElementById("image-list");
 
     new Masonry(imageList, {
@@ -122,12 +124,9 @@
     }
 
     function onSubmit() {
-
         let img = document.getElementById("img").files[0];
         let formData = new FormData();
-
         formData.append("img", img);
-
         fetch('${statics["api.APIManager"].API_PROTECTED_UPLOAD}?oauth=' + oauth, {method: "POST", body: formData})
             .then(res => res.json())
             .then(image => {

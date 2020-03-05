@@ -1,9 +1,9 @@
-package storage.implementation;
+package api.authentication.implementation;
 
+import api.authentication.Image;
+import api.authentication.ImageList;
+import api.authentication.User;
 import org.jetbrains.annotations.NotNull;
-import storage.Image;
-import storage.ImageList;
-import storage.User;
 
 import java.util.ArrayList;
 import java.util.List;

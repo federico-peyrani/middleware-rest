@@ -1,4 +1,4 @@
-package storage;
+package api.authentication;
 
 import api.APIManager;
 import api.resources.Resource;

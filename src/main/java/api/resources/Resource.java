@@ -33,4 +33,14 @@ public @interface Resource {
 
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.FIELD})
+    @interface Method {
+
+        String key();
+
+        String href();
+
+    }
+
 }
