@@ -23,11 +23,8 @@ class UserSQL implements User {
     @NotNull
     @Override
     public String getUsername() {
-
-        String query = "SELECT username" + "\n" +
-                "FROM " + AuthenticationSQL.TABLE_USERS + "\n" +
-                "WHERE id = :id";
-
+        String query = "SELECT username FROM :table WHERE id = :id"
+                .replace(AuthenticationSQL.TABLE, AuthenticationSQL.TABLE_USERS);
         try (Connection con = sql2o.open()) {
             return con.createQuery(query)
                     .addParameter("id", id)
@@ -38,11 +35,8 @@ class UserSQL implements User {
     @NotNull
     @Override
     public String getPassword() {
-
-        String query = "SELECT password" + "\n" +
-                "FROM " + AuthenticationSQL.TABLE_USERS + "\n" +
-                "WHERE id = :id";
-
+        String query = "SELECT password FROM :table WHERE id = :id"
+                .replace(AuthenticationSQL.TABLE, AuthenticationSQL.TABLE_USERS);
         try (Connection con = sql2o.open()) {
             return con.createQuery(query)
                     .addParameter("id", id)
@@ -54,9 +48,8 @@ class UserSQL implements User {
     @Override
     public ImageList getImages() {
 
-        String query = "SELECT *" + "\n" +
-                "FROM " + AuthenticationSQL.TABLE_IMAGES + "\n" +
-                "WHERE user_id = :id";
+        String query = "SELECT * FROM :table WHERE user_id = :id"
+                .replace(AuthenticationSQL.TABLE, AuthenticationSQL.TABLE_IMAGES);
 
         try (Connection con = sql2o.open()) {
 
@@ -85,8 +78,8 @@ class UserSQL implements User {
     @Override
     public void addImage(@NotNull Image image) {
 
-        String query = "INSERT INTO " + AuthenticationSQL.TABLE_IMAGES + "(url, user_id, raw, filename)\n" +
-                "VALUES(:url, :user_id, :raw, :filename)";
+        String query = "INSERT INTO :table(url, user_id, raw, filename) VALUES(:url, :user_id, :raw, :filename)"
+                .replace(AuthenticationSQL.TABLE, AuthenticationSQL.TABLE_IMAGES);
 
         try (Connection con = sql2o.open()) {
             con.createQuery(query)
@@ -105,8 +98,8 @@ class UserSQL implements User {
 
         try (Connection con = sql2o.open()) {
 
-            String query = "INSERT INTO " + AuthenticationSQL.TABLE_TOKENS + "(oauth, user_id, privilege) " +
-                    "VALUES (:oauth, :user_id, :privilege)";
+            String query = "INSERT INTO :table(oauth, user_id, privilege) VALUES (:oauth, :user_id, :privilege)"
+                    .replace(AuthenticationSQL.TABLE, AuthenticationSQL.TABLE_TOKENS);
             con.createQuery(query)
                     .addParameter("oauth", token.oauth)
                     .addParameter("user_id", id)

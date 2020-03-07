@@ -16,6 +16,7 @@ public final class AuthenticationSQL implements AuthenticationInterface {
     static final String TABLE_USERS = "users";
     static final String TABLE_IMAGES = "images";
     static final String TABLE_TOKENS = "tokens";
+    static final String TABLE = ":table";
 
     private static final AuthenticationSQL instance = new AuthenticationSQL();
     private static Sql2o sql2o;
@@ -38,27 +39,29 @@ public final class AuthenticationSQL implements AuthenticationInterface {
 
         try (Connection con = sql2o.open()) {
 
-            con.createQuery("CREATE TABLE IF NOT EXISTS " + TABLE_USERS +
-                    "(\n" +
-                    "    id       INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-                    "    username TEXT UNIQUE                       NOT NULL,\n" +
-                    "    password TEXT                              NOT NULL\n" +
-                    ")").executeUpdate();
+            String query = ("CREATE TABLE IF NOT EXISTS :table" +
+                    "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                    "username TEXT UNIQUE NOT NULL," +
+                    "password TEXT NOT NULL)")
+                    .replace(TABLE, TABLE_USERS);
+            con.createQuery(query).executeUpdate();
 
-            con.createQuery("CREATE TABLE IF NOT EXISTS " + TABLE_IMAGES +
-                    "(\n" +
-                    "    url       TEXT PRIMARY KEY                                                               NOT NULL,\n" +
-                    "    user_id   INTEGER REFERENCES " + TABLE_USERS + "(id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,\n" +
-                    "    raw       BLOB                                                                           NOT NULL,\n" +
-                    "    filename  TEXT                                                                           NOT NULL\n" +
-                    ")").executeUpdate();
+            query = ("CREATE TABLE IF NOT EXISTS :table" +
+                    "(url TEXT PRIMARY KEY NOT NULL," +
+                    "user_id INTEGER REFERENCES :table_users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL," +
+                    "raw BLOB NOT NULL," +
+                    "filename TEXT NOT NULL)")
+                    .replace(TABLE, TABLE_IMAGES)
+                    .replace(":table_users", TABLE_USERS);
+            con.createQuery(query).executeUpdate();
 
-            con.createQuery("CREATE TABLE IF NOT EXISTS " + TABLE_TOKENS +
-                    "(\n" +
-                    "    oauth     TEXT PRIMARY KEY                                                               NOT NULL,\n" +
-                    "    user_id   INTEGER REFERENCES " + TABLE_USERS + "(id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,\n" +
-                    "    privilege TEXT                                                                           NOT NULL\n" +
-                    ")").executeUpdate();
+            query = ("CREATE TABLE IF NOT EXISTS :table" +
+                    "(oauth TEXT PRIMARY KEY NOT NULL," +
+                    "user_id INTEGER REFERENCES :table_users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL," +
+                    "privilege TEXT NOT NULL)")
+                    .replace(TABLE, TABLE_TOKENS)
+                    .replace("table_users", TABLE_USERS);
+            con.createQuery(query).executeUpdate();
         }
     }
 
@@ -71,9 +74,8 @@ public final class AuthenticationSQL implements AuthenticationInterface {
 
             con.getJdbcConnection().setAutoCommit(false);
 
-            String query = "SELECT id" + "\n" +
-                    "FROM " + TABLE_USERS + "\n" +
-                    "WHERE username = :username AND password = :password";
+            String query = "SELECT id FROM :table WHERE username = :username AND password = :password"
+                    .replace(TABLE, TABLE_USERS);
 
             Integer id = con.createQuery(query)
                     .addParameter("username", username)
@@ -100,8 +102,8 @@ public final class AuthenticationSQL implements AuthenticationInterface {
 
             con.getJdbcConnection().setAutoCommit(false);
 
-            String query = "INSERT INTO " + TABLE_USERS + "(username, password) " +
-                    "VALUES (:username, :password)";
+            String query = "INSERT INTO :table (username, password) VALUES (:username, :password)"
+                    .replace(TABLE, TABLE_USERS);
 
             int id = con.createQuery(query)
                     .addParameter("username", username)
@@ -121,9 +123,8 @@ public final class AuthenticationSQL implements AuthenticationInterface {
     @Override
     public @NotNull Token fromString(@NotNull String string) throws AuthenticationException {
 
-        String query = "SELECT *" + "\n" +
-                "FROM " + TABLE_TOKENS + "\n" +
-                "WHERE oauth = :oauth";
+        String query = "SELECT * FROM :table WHERE oauth = :oauth"
+                .replace(TABLE, TABLE_TOKENS);
 
         try (Connection con = sql2o.open()) {
 
