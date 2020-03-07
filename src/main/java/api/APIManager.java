@@ -306,13 +306,13 @@ public class APIManager {
             return ResourceObj.build(AuthenticationInterface.class, authentication);
         });
 
-        get(API_LOGIN, this::handleApiLogin);
-        get(API_SIGNUP, this::handleApiSignup);
+        post(API_LOGIN, this::handleApiLogin);
+        post(API_SIGNUP, this::handleApiSignup);
         get(API_PROTECTED_USER, this::handleApiUser);
         post(API_PROTECTED_UPLOAD, this::handleApiUpload);
         get(API_PROTECTED_IMAGES, this::handleApiImages);
         get(API_PROTECTED_IMAGE_URL, this::handleApiImage);
-        get(API_PROTECTED_GRANT, this::handleGrant);
+        post(API_PROTECTED_GRANT, this::handleGrant);
 
         exception(ApiException.class, this::handleApiException);
     }
