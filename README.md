@@ -5,7 +5,7 @@ requests to the static pages and the API endpoints respectively.
 
 ## Getting started
 
-Launch the `main` method in the `Main` class. If you want to use an external database to permanently store the information
+Launch the `main` method in the `common.Main` class. If you want to use an external database to permanently store the information
 of the system (created users and images), pass as the only argument the absolute path to the SQL database to user.
 If no argument is passed, the application will store all the information in primary storage only, meaning that any information 
 about users and uploaded images is lost once the JVM is stopped.
@@ -14,8 +14,11 @@ Connect to <http://localhost:4567/login> with a browser to test the functionalit
 
 ### Launch modules separately
 
-Both modules (HTTP server and API server) can be launched independently of one another by using the respective `main` 
-methods, as they do not strictly rely on one another and can effectively run on separate JVMs.
+~~Both modules (HTTP server and API server) can be launched independently of one another by using the respective `main` 
+methods, as they do not strictly rely on one another and can effectively run on separate JVMs.~~
+
+Edit: due to the fact that to run the HTTP server and API server on two different JVMs it would require to run them
+on different ports, the feature as been shelved (for now at least).
 
 ## API endpoints
 
