@@ -16,7 +16,7 @@ public @interface Resource {
     /**
      * @return the URL where the resource can be found
      */
-    String self();
+    String href();
 
     /**
      * @return whether the url follows some type of parameterized template
@@ -34,7 +34,7 @@ public @interface Resource {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.METHOD, ElementType.FIELD})
+    @Target(ElementType.METHOD)
     @interface Method {
 
         String key();

@@ -4,7 +4,7 @@ import api.APIManager;
 import api.resources.Resource;
 import org.jetbrains.annotations.NotNull;
 
-@Resource(self = APIManager.API_AUTHENTICATE)
+@Resource(href = APIManager.API_AUTHENTICATE)
 public interface AuthenticationInterface {
 
     @NotNull

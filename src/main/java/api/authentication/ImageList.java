@@ -6,7 +6,7 @@ import api.resources.Resource;
 import java.util.Collections;
 import java.util.List;
 
-@Resource(self = APIManager.API_PROTECTED_IMAGES + "?oauth={oauth}", templated = true)
+@Resource(href = APIManager.API_PROTECTED_IMAGES + "?oauth={oauth}", templated = true)
 public class ImageList {
 
     @Resource.Property(key = "images")

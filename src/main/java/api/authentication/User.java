@@ -4,7 +4,7 @@ import api.APIManager;
 import api.resources.Resource;
 import org.jetbrains.annotations.NotNull;
 
-@Resource(self = APIManager.API_PROTECTED_USER + "?oauth={oauth}", templated = true)
+@Resource(href = APIManager.API_PROTECTED_USER + "?oauth={oauth}", templated = true)
 public interface User {
 
     @NotNull
@@ -18,6 +18,7 @@ public interface User {
     @Resource.Property(key = "images", external = true)
     ImageList getImages();
 
+    @Resource.Method(key = "upload", href = APIManager.API_PROTECTED_UPLOAD + "?oauth={oauth}")
     void addImage(@NotNull Image image);
 
 }

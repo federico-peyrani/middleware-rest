@@ -3,7 +3,7 @@ package api.authentication;
 import api.APIManager;
 import api.resources.Resource;
 
-@Resource(self = "${request}")
+@Resource(href = "${request}")
 public class AuthenticationException extends Exception {
 
     @Resource.Property(key = "status")

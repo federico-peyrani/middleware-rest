@@ -70,8 +70,8 @@ public class ResourceObj {
 
         // if the href of the resource is parameterized, use a regex to swap the parameter
         // with the actual value from the matching property
-        String href = resource.self();
-        Matcher matcher = PATTERN.matcher(resource.self());
+        String href = resource.href();
+        Matcher matcher = PATTERN.matcher(resource.href());
         while (matcher.find()) {
             String paramName = matcher.group("name");
             String group = matcher.group(0);
@@ -82,6 +82,7 @@ public class ResourceObj {
                     .value.toString());
         }
 
+        // add the '_links' object and inflate it with the self reference
         output.put(LINKS, links);
         links.put(LINKS_SELF, new JSONObject()
                 .put(LINKS_HREF, href)
@@ -94,6 +95,8 @@ public class ResourceObj {
                     links.put(annotation.key(), new JSONObject().put(LINKS_HREF, annotation.href()));
                 });
 
+        // if any property is present, and the caller wants to add the property to the object, then
+        // add the '_embedded' object and inflate it
         if (includeEmbedded && !propertyObjList.isEmpty()) {
             output.put(EMBEDDED, new JSONObject());
             JSONObject embedded = output.getJSONObject(EMBEDDED);

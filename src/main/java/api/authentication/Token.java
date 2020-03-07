@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 
-@Resource(self = "/api/protected/{method}", templated = true)
+@Resource(href = "/api/protected/{method}", templated = true)
 public class Token {
 
     @Resource.Property(key = "status")
