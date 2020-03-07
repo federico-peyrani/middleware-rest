@@ -1,8 +1,6 @@
 package api.authentication.sql;
 
-import api.authentication.Image;
-import api.authentication.ImageList;
-import api.authentication.User;
+import api.authentication.*;
 import org.jetbrains.annotations.NotNull;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
@@ -97,6 +95,25 @@ class UserSQL implements User {
                     .addParameter("raw", image.raw())
                     .addParameter("filename", image.getFilename())
                     .executeUpdate();
+        }
+    }
+
+    @Override
+    public @NotNull Token grant(Token.Privilege privilege) throws AuthenticationException {
+
+        Token token = new Token(this, privilege);
+
+        try (Connection con = sql2o.open()) {
+
+            String query = "INSERT INTO " + AuthenticationSQL.TABLE_TOKENS + "(oauth, user_id, privilege) " +
+                    "VALUES (:oauth, :user_id, :privilege)";
+            con.createQuery(query)
+                    .addParameter("oauth", token.oauth)
+                    .addParameter("user_id", id)
+                    .addParameter("privilege", privilege)
+                    .executeUpdate();
+
+            return token;
         }
     }
 

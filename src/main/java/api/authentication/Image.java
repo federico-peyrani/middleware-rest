@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.UUID;
 
-@Resource(href = APIManager.API_PROTECTED_IMAGE + "/${id}?oauth={oauth}", templated = true)
+@Resource(href = APIManager.API_PROTECTED_IMAGE + "/${id}", templated = true)
 public class Image {
 
     private final byte[] raw;

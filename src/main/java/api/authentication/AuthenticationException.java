@@ -1,29 +1,11 @@
 package api.authentication;
 
-import api.APIManager;
-import api.resources.Resource;
+import api.ApiException;
 
-@Resource(href = "${request}")
-public class AuthenticationException extends Exception {
-
-    @Resource.Property(key = "status")
-    private static final String STATUS = "ERROR";
-
-    @Resource.Property(key = "request")
-    private String route = APIManager.API_AUTHENTICATE;
+public class AuthenticationException extends ApiException {
 
     public AuthenticationException(String message) {
         super(message);
-    }
-
-    public void setRoute(String route) {
-        this.route = route;
-    }
-
-    @Resource.Property(key = "message")
-    @Override
-    public String getMessage() {
-        return super.getMessage();
     }
 
     public static class InvalidLoginException extends AuthenticationException {
@@ -48,8 +30,8 @@ public class AuthenticationException extends Exception {
             super(message);
         }
 
-        public OperationNotPermittedException(Token token) {
-            this("Token with " + token.privilege + " rights can't perform this action");
+        public OperationNotPermittedException(Token.Privilege privilege) {
+            this("Token with " + privilege + " rights can't perform this action");
         }
 
     }

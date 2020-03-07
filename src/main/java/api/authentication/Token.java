@@ -32,11 +32,6 @@ public class Token {
         this.privilege = privilege;
     }
 
-    public boolean enables(@NotNull Privilege privilege) {
-        if (this.privilege == privilege) return true;
-        return Arrays.asList(this.privilege.included).contains(privilege);
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(oauth);
@@ -67,6 +62,11 @@ public class Token {
 
         Privilege(Privilege... includes) {
             included = includes;
+        }
+
+        public boolean enables(@NotNull Privilege privilege) {
+            if (this == privilege) return true;
+            return Arrays.asList(included).contains(privilege);
         }
 
     }

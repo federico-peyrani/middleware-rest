@@ -2,18 +2,18 @@ package api.authentication.implementation;
 
 import api.authentication.Image;
 import api.authentication.ImageList;
+import api.authentication.Token;
 import api.authentication.User;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 class UserImpl implements User {
 
+    final Set<Token> tokens = new HashSet<>();
+
     private final String username;
     private final String password;
-
     private final List<Image> images = new ArrayList<>();
 
     UserImpl(String username, String password) {
@@ -42,6 +42,13 @@ class UserImpl implements User {
     @Override
     public void addImage(@NotNull Image image) {
         images.add(image);
+    }
+
+    @Override
+    public @NotNull Token grant(Token.Privilege privilege) {
+        Token token = new Token(this, privilege);
+        tokens.add(token);
+        return token;
     }
 
     @Override

@@ -62,27 +62,10 @@ public final class AuthenticationSQL implements AuthenticationInterface {
         }
     }
 
-    private Token createToken(int userId, Token.Privilege privilege) {
-
-        Token token = new Token(new UserSQL(sql2o, userId), privilege);
-
-        try (Connection con = sql2o.open()) {
-
-            String query = "INSERT INTO " + TABLE_TOKENS + "(oauth, user_id, privilege) " +
-                    "VALUES (:oauth, :user_id, :privilege)";
-            con.createQuery(query)
-                    .addParameter("oauth", token.oauth)
-                    .addParameter("user_id", userId)
-                    .addParameter("privilege", privilege)
-                    .executeUpdate();
-
-            return token;
-        }
-    }
-
     @NotNull
     @Override
-    public Token login(@NotNull String username, @NotNull String password) throws AuthenticationException.InvalidLoginException {
+    public User login(@NotNull String username, @NotNull String password)
+            throws AuthenticationException.InvalidLoginException {
 
         try (Connection con = sql2o.open()) {
 
@@ -101,7 +84,7 @@ public final class AuthenticationSQL implements AuthenticationInterface {
 
             if (id == null) throw new AuthenticationException.InvalidLoginException();
 
-            return createToken(id, Token.Privilege.MASTER);
+            return new UserSQL(sql2o, id);
 
         } catch (Sql2oException | SQLException e) {
             throw new AuthenticationException.InvalidLoginException();
@@ -110,7 +93,8 @@ public final class AuthenticationSQL implements AuthenticationInterface {
 
     @NotNull
     @Override
-    public Token signup(@NotNull String username, @NotNull String password) throws AuthenticationException.UsernameAlreadyExistingException {
+    public User signup(@NotNull String username, @NotNull String password)
+            throws AuthenticationException.UsernameAlreadyExistingException {
 
         try (Connection con = sql2o.open()) {
 
@@ -127,7 +111,7 @@ public final class AuthenticationSQL implements AuthenticationInterface {
 
             con.commit();
 
-            return createToken(id, Token.Privilege.MASTER);
+            return new UserSQL(sql2o, id);
 
         } catch (Sql2oException | SQLException e) {
             throw new AuthenticationException.UsernameAlreadyExistingException();
@@ -152,25 +136,6 @@ public final class AuthenticationSQL implements AuthenticationInterface {
                             new UserSQL(sql2o, Integer.parseInt(it.get("user_id").toString())),
                             Token.Privilege.valueOf(it.get("privilege").toString())))
                     .orElseThrow(() -> new AuthenticationException("Invalid token number"));
-        }
-    }
-
-    @Override
-    public @NotNull Token grant(User user, Token.Privilege privilege) throws AuthenticationException {
-
-        try (Connection con = sql2o.open()) {
-
-            String query = "SELECT id" + "\n" +
-                    "FROM " + TABLE_USERS + "\n" +
-                    "WHERE username = :username";
-
-            Integer id = con.createQuery(query)
-                    .addParameter("username", user.getUsername())
-                    .executeAndFetchFirst(Integer.class);
-
-            if (id == null) throw new AuthenticationException.InvalidLoginException();
-
-            return createToken(id, privilege);
         }
     }
 

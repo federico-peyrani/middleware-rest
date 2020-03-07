@@ -7,16 +7,13 @@ import api.authentication.User;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 public class AuthenticationImpl implements AuthenticationInterface {
 
     private final static AuthenticationImpl instance = new AuthenticationImpl();
 
-    private final Collection<User> users = new HashSet<>();
-    private final Map<String, Token> stringTokenMap = new HashMap<>();
+    private final Collection<UserImpl> users = new HashSet<>();
 
     private AuthenticationImpl() {
     }
@@ -27,7 +24,7 @@ public class AuthenticationImpl implements AuthenticationInterface {
 
     @NotNull
     @Override
-    public Token login(@NotNull String username, @NotNull String password)
+    public User login(@NotNull String username, @NotNull String password)
             throws AuthenticationException.InvalidLoginException {
 
         User user = users.stream()
@@ -39,39 +36,31 @@ public class AuthenticationImpl implements AuthenticationInterface {
             throw new AuthenticationException.InvalidLoginException();
         }
 
-        Token token = new Token(user, Token.Privilege.MASTER);
-        stringTokenMap.put(token.oauth, token);
-        return token;
+        return user;
     }
 
     @NotNull
     @Override
-    public Token signup(@NotNull String username, @NotNull String password)
+    public User signup(@NotNull String username, @NotNull String password)
             throws AuthenticationException.UsernameAlreadyExistingException {
 
-        User newUser = new UserImpl(username, password);
+        UserImpl newUser = new UserImpl(username, password);
 
         if (users.contains(newUser)) {
             throw new AuthenticationException.UsernameAlreadyExistingException();
         }
 
-        Token token = new Token(newUser, Token.Privilege.MASTER);
-        stringTokenMap.put(token.oauth, token);
         users.add(newUser);
-        return token;
+        return newUser;
     }
 
     @Override
     public @NotNull Token fromString(@NotNull String string) throws AuthenticationException {
-        if (!stringTokenMap.containsKey(string)) {
-            throw new AuthenticationException("Invalid token number");
-        }
-        return stringTokenMap.get(string);
-    }
-
-    @Override
-    public @NotNull Token grant(User user, Token.Privilege privilege) throws AuthenticationException {
-        return new Token(user, privilege);
+        return users.stream()
+                .flatMap(it -> it.tokens.stream())
+                .filter(it -> it.oauth.equals(string))
+                .findFirst()
+                .orElseThrow(() -> new AuthenticationException("Invalid token number"));
     }
 
 }
