@@ -104,25 +104,19 @@
         imageList.appendChild(li);
     }
 
-    let user;
-
-    const oauth = localStorage.getItem('oauth');
-    if (oauth == null) {
-        window.location.pathname = '/login';
-    }
-
-    fetch(Strings.create('${statics["api.APIManager"].API_PROTECTED_USER}?oauth={oauth}', {oauth: oauth}))
+    let user; // used to store the user object when retrieved for the first time
+    fetch('${statics["api.APIManager"].API_PROTECTED_USER}')
         .then(res => res.json())
         .then(out => {
             user = out;
             document.getElementById('username').innerText = out._embedded.username;
             document.title = 'Personal Page - ' + out._embedded.username;
-            const images = Strings.create(out._links.images.href, {oauth: oauth});
+            const images = out._links.images.href;
             fetch(images)
                 .then(res => res.json())
                 .then(out => {
                     for (const image of out._embedded.images) {
-                        appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));
+                        appendImage(Strings.create(image._links.self.href, {id: image._embedded.id}));
                     }
                 });
         });
@@ -131,10 +125,10 @@
         let img = document.getElementById("img").files[0];
         let formData = new FormData();
         formData.append("img", img);
-        fetch(Strings.create(user._links.upload.href, {oauth: oauth}), {method: "POST", body: formData})
+        fetch(user._links.upload.href, {method: "POST", body: formData})
             .then(res => res.json())
             .then(image => {
-                appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));
+                appendImage(Strings.create(image._links.self.href, {id: image._embedded.id}));
             });
     }
 

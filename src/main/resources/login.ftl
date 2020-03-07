@@ -110,9 +110,7 @@
     let url;
     fetch('${statics["api.APIManager"].API_AUTHENTICATE}')
         .then(res => res.json())
-        .then(out => {
-            url = out._links;
-        });
+        .then(out => url = out._links);
 
     function authenticate(method) {
         let username = document.getElementById('username').value;
@@ -120,11 +118,13 @@
         fetch(Strings.create(url[method].href, {username: username, password: password}), {method: "POST"})
             .then(res => res.json())
             .then(out => {
-                if (out._embedded.status === '${statics["api.authentication.Token"].STATUS}') {
-                    localStorage.setItem('oauth', out._embedded.oauth);
-                    window.location.pathname = '${statics["http.HTTPManager"].PAGE_PROTECTED_USER}';
-                } else {
+
+                if (out._embedded.hasOwnProperty('status') && out._embedded.status == '${statics["api.ApiException"].STATUS}') {
+                    // error
                     document.getElementById('error_message').innerHTML = out._embedded.message;
+                } else {
+                    // login or signup went fine
+                    window.location.pathname = '${statics["http.HTTPManager"].PAGE_PROTECTED_USER}';
                 }
             });
     }

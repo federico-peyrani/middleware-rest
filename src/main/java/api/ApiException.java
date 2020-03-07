@@ -6,7 +6,7 @@ import api.resources.Resource;
 public class ApiException extends Exception {
 
     @Resource.Property(key = "status")
-    private static final String STATUS = "ERROR";
+    public static final String STATUS = "ERROR";
 
     @Resource.Property(key = "request")
     private String route = APIManager.API_AUTHENTICATE;

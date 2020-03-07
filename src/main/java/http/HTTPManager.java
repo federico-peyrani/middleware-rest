@@ -24,10 +24,6 @@ public class HTTPManager {
         return instance;
     }
 
-    public static void main(String[] args) {
-        instance.init();
-    }
-
     private Object handlePageLogin(Request request, Response response) {
         request.session(true);
         response.status(200);
