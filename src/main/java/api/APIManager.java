@@ -27,6 +27,7 @@ public class APIManager {
     public static final String API_PROTECTED_IMAGES = "/api/protected/images";
     public static final String API_PROTECTED_IMAGE = "/api/protected/image";
     public static final String API_PROTECTED_IMAGE_URL = API_PROTECTED_IMAGE + "/:image";
+    public static final String API_PROTECTED_GRANT = "/api/protected/grant";
 
     public static final String REQUEST_ATTRIBUTE_TOKEN = "token";
     public static final String REQUEST_PARAM_OAUTH = "oauth";
@@ -60,9 +61,10 @@ public class APIManager {
     /**
      * Invoked every time a request is made to the path /api/protected/* before evaluating other routes.
      *
-     * @param request
-     * @param response
-     * @throws AuthenticationException if the provided token is not valid
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @throws AuthenticationException if the provided token is not valid or if the incoming request does not include an
+     *                                 authentication token
      */
     private void handleProtected(Request request, Response response) throws AuthenticationException {
         String stringToken = request.queryParams(REQUEST_PARAM_OAUTH);
@@ -71,6 +73,13 @@ public class APIManager {
         request.attribute(REQUEST_ATTRIBUTE_TOKEN, token);
     }
 
+    /**
+     * @param request       the {@link Request}
+     * @param response      the {@link Response}
+     * @param tokenSupplier
+     * @return
+     * @throws AuthenticationException
+     */
     private Object authenticate(Request request, Response response, TokenSupplier tokenSupplier)
             throws AuthenticationException {
 
@@ -92,25 +101,44 @@ public class APIManager {
      * Invoked when the api.storage manager raises an exception, due to either the username already existing in the
      * system, or an invalid login attempt.
      *
-     * @param e        the {@link AuthenticationException} thrown by {@link AuthenticationInterface}
-     * @param request  the {@link Request}
-     * @param response the {@link Response}
+     * @param exception the {@link AuthenticationException} thrown by {@link AuthenticationInterface}
+     * @param request   the {@link Request}
+     * @param response  the {@link Response}
      */
-    private void handleAuthenticationException(AuthenticationException e,
+    private void handleAuthenticationException(AuthenticationException exception,
                                                Request request, Response response) {
+        exception.setRoute(request.uri());
         response.status(201);
         response.type("application/json");
-        response.body(ResourceObj.build(AuthenticationException.class, e).toString());
+        response.body(ResourceObj.build(AuthenticationException.class, exception).toString());
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     */
     private Object handleApiLogin(Request request, Response response) throws AuthenticationException {
         return authenticate(request, response, authentication::login);
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     */
     private Object handleApiSignup(Request request, Response response) throws AuthenticationException {
         return authenticate(request, response, authentication::signup);
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     */
     private Object handleApiUser(Request request, Response response) throws AuthenticationException {
 
         @NotNull Token token = request.attribute(REQUEST_ATTRIBUTE_TOKEN);
@@ -125,6 +153,14 @@ public class APIManager {
         return ResourceObj.build(User.class, user);
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     * @throws IOException
+     * @throws ServletException
+     */
     private Object handleApiUpload(Request request, Response response)
             throws AuthenticationException, IOException, ServletException {
 
@@ -145,6 +181,12 @@ public class APIManager {
         return ResourceObj.build(image);
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     */
     private Object handleApiImages(Request request, Response response) throws AuthenticationException {
 
         @NotNull Token token = request.attribute(REQUEST_ATTRIBUTE_TOKEN);
@@ -159,6 +201,12 @@ public class APIManager {
         return ResourceObj.build(user.getImages());
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     */
     private Object handleApiImage(Request request, Response response) throws AuthenticationException {
 
         @NotNull Token token = request.attribute(REQUEST_ATTRIBUTE_TOKEN);
@@ -183,6 +231,31 @@ public class APIManager {
         return image.raw();
     }
 
+    /**
+     * @param request  the {@link Request}
+     * @param response the {@link Response}
+     * @return
+     * @throws AuthenticationException
+     */
+    private Object handleGrant(Request request, Response response) throws AuthenticationException {
+
+        @NotNull Token token = request.attribute(REQUEST_ATTRIBUTE_TOKEN);
+        @NotNull User user = token.user;
+
+        if (!token.enables(Token.Privilege.MASTER)) {
+            throw new AuthenticationException.OperationNotPermittedException(token);
+        }
+
+        Token.Privilege privilege = Token.Privilege.valueOf(request.queryParams("privilege").toUpperCase());
+        if (privilege == Token.Privilege.MASTER) {
+            throw new AuthenticationException.OperationNotPermittedException("Can't grant MASTER privilege");
+        }
+
+        response.status(200);
+        response.type("application/json");
+        return ResourceObj.build(authentication.grant(user, privilege));
+    }
+
     public void init(AuthenticationInterface authenticationInterface) {
 
         this.authentication = authenticationInterface;
@@ -201,6 +274,7 @@ public class APIManager {
         post(API_PROTECTED_UPLOAD, this::handleApiUpload);
         get(API_PROTECTED_IMAGES, this::handleApiImages);
         get(API_PROTECTED_IMAGE_URL, this::handleApiImage);
+        post(API_PROTECTED_GRANT, this::handleGrant);
 
         exception(AuthenticationException.class, this::handleAuthenticationException);
 

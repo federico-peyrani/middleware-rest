@@ -69,4 +69,9 @@ public class AuthenticationImpl implements AuthenticationInterface {
         return stringTokenMap.get(string);
     }
 
+    @Override
+    public @NotNull Token grant(User user, Token.Privilege privilege) throws AuthenticationException {
+        return new Token(user, privilege);
+    }
+
 }

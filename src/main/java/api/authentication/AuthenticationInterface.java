@@ -4,7 +4,7 @@ import api.APIManager;
 import api.resources.Resource;
 import org.jetbrains.annotations.NotNull;
 
-@Resource(self = "/api/authentication")
+@Resource(self = APIManager.API_AUTHENTICATE)
 public interface AuthenticationInterface {
 
     @NotNull
@@ -19,5 +19,15 @@ public interface AuthenticationInterface {
 
     @NotNull
     Token fromString(@NotNull String string) throws AuthenticationException;
+
+    /**
+     * @param user
+     * @param privilege
+     * @return
+     * @throws AuthenticationException
+     */
+    @NotNull
+    @Resource.Method(key = "grant", href = APIManager.API_PROTECTED_GRANT + "?privilege={privilege}")
+    Token grant(User user, Token.Privilege privilege) throws AuthenticationException;
 
 }

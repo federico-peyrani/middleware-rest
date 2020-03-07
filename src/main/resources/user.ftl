@@ -84,25 +84,6 @@
         })()
     };
 
-    const oauth = localStorage.getItem('oauth');
-    if (oauth == null) {
-        window.location.pathname = '/login';
-    }
-    fetch(Strings.create('${statics["api.APIManager"].API_PROTECTED_USER}?oauth={oauth}', {oauth: oauth}))
-        .then(res => res.json())
-        .then(out => {
-            document.getElementById('username').innerText = out._embedded.username;
-            document.title = 'Personal Page - ' + out._embedded.username;
-            const images = Strings.create(out._links.images.href, {oauth: oauth});
-            fetch(images)
-                .then(res => res.json())
-                .then(out => {
-                    for (const image of out._embedded.images) {
-                        appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));
-                    }
-                });
-        });
-
     const imageList = document.getElementById("image-list");
 
     new Masonry(imageList, {
@@ -123,11 +104,34 @@
         imageList.appendChild(li);
     }
 
+    let user;
+
+    const oauth = localStorage.getItem('oauth');
+    if (oauth == null) {
+        window.location.pathname = '/login';
+    }
+
+    fetch(Strings.create('${statics["api.APIManager"].API_PROTECTED_USER}?oauth={oauth}', {oauth: oauth}))
+        .then(res => res.json())
+        .then(out => {
+            user = out;
+            document.getElementById('username').innerText = out._embedded.username;
+            document.title = 'Personal Page - ' + out._embedded.username;
+            const images = Strings.create(out._links.images.href, {oauth: oauth});
+            fetch(images)
+                .then(res => res.json())
+                .then(out => {
+                    for (const image of out._embedded.images) {
+                        appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));
+                    }
+                });
+        });
+
     function onSubmit() {
         let img = document.getElementById("img").files[0];
         let formData = new FormData();
         formData.append("img", img);
-        fetch('${statics["api.APIManager"].API_PROTECTED_UPLOAD}?oauth=' + oauth, {method: "POST", body: formData})
+        fetch(Strings.create(user._links.upload.href, {oauth: oauth}), {method: "POST", body: formData})
             .then(res => res.json())
             .then(image => {
                 appendImage(Strings.create(image._links.self.href, {oauth: oauth, id: image._embedded.id}));

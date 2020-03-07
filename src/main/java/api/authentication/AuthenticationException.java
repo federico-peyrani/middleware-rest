@@ -1,15 +1,23 @@
 package api.authentication;
 
+import api.APIManager;
 import api.resources.Resource;
 
-@Resource(self = "/api/authentication")
+@Resource(self = "${request}")
 public class AuthenticationException extends Exception {
 
     @Resource.Property(key = "status")
     private static final String STATUS = "ERROR";
 
+    @Resource.Property(key = "request")
+    private String route = APIManager.API_AUTHENTICATE;
+
     public AuthenticationException(String message) {
         super(message);
+    }
+
+    public void setRoute(String route) {
+        this.route = route;
     }
 
     @Resource.Property(key = "message")
@@ -36,8 +44,12 @@ public class AuthenticationException extends Exception {
 
     public static class OperationNotPermittedException extends AuthenticationException {
 
+        public OperationNotPermittedException(String message) {
+            super(message);
+        }
+
         public OperationNotPermittedException(Token token) {
-            super("Token with " + token.privilege + " rights can't perform this action");
+            this("Token with " + token.privilege + " rights can't perform this action");
         }
 
     }

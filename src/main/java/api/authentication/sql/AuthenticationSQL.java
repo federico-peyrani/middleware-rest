@@ -3,6 +3,7 @@ package api.authentication.sql;
 import api.authentication.AuthenticationException;
 import api.authentication.AuthenticationInterface;
 import api.authentication.Token;
+import api.authentication.User;
 import org.jetbrains.annotations.NotNull;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
@@ -151,6 +152,25 @@ public final class AuthenticationSQL implements AuthenticationInterface {
                             new UserSQL(sql2o, Integer.parseInt(it.get("user_id").toString())),
                             Token.Privilege.valueOf(it.get("privilege").toString())))
                     .orElseThrow(() -> new AuthenticationException("Invalid token number"));
+        }
+    }
+
+    @Override
+    public @NotNull Token grant(User user, Token.Privilege privilege) throws AuthenticationException {
+
+        try (Connection con = sql2o.open()) {
+
+            String query = "SELECT id" + "\n" +
+                    "FROM " + TABLE_USERS + "\n" +
+                    "WHERE username = :username";
+
+            Integer id = con.createQuery(query)
+                    .addParameter("username", user.getUsername())
+                    .executeAndFetchFirst(Integer.class);
+
+            if (id == null) throw new AuthenticationException.InvalidLoginException();
+
+            return createToken(id, privilege);
         }
     }
 
