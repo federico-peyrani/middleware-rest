@@ -1,0 +1,41 @@
+version: '3'
+services:
+  http:
+    build: .
+    image: middleware/rest:latest
+    hostname: http
+    environment:
+      - PORT=8080
+    ports:
+      - 8080:8080
+    depends_on:
+      - mariadb
+    command: ["http.HTTPManager"]
+
+  api:
+    build: .
+    image: middleware/rest:latest
+    hostname: api
+    environment:
+      - PORT=3000
+      - DATABASE_HOST=mariadb
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=middleware
+      - DATABASE_USER=root
+      - DATABASE_PASS=root
+    ports:
+      - 3000:3000
+    depends_on:
+      - mariadb
+    command: ["api.APIManager"]
+
+  mariadb:
+    image: mariadb:10.3
+    hostname: mariadb
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=middleware
+    ports:
+      - 3306:3306
+      - 5567:5567
