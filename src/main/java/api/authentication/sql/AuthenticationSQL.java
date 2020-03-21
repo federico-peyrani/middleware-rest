@@ -1,5 +1,6 @@
 package api.authentication.sql;
 
+import api.APIManager;
 import api.authentication.AuthenticationException;
 import api.authentication.AuthenticationInterface;
 import api.authentication.Token;
@@ -24,9 +25,9 @@ public final class AuthenticationSQL implements AuthenticationInterface {
     private AuthenticationSQL() {
     }
 
-    public static void init(String path) {
+    public static void init() {
         if (sql2o != null) throw new Sql2oException("Database already open");
-        sql2o = new Sql2o("jdbc:sqlite:" + path, null, null);
+        sql2o = new Sql2o("jdbc:mysql://localhost:3306/hello_java", "demo_java", "1234");
         createTables();
     }
 
@@ -40,27 +41,31 @@ public final class AuthenticationSQL implements AuthenticationInterface {
         try (Connection con = sql2o.open()) {
 
             String query = ("CREATE TABLE IF NOT EXISTS :table" +
-                    "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                    "username TEXT UNIQUE NOT NULL," +
-                    "password TEXT NOT NULL)")
-                    .replace(TABLE, TABLE_USERS);
+                    "(id INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY," +
+                    "username VARCHAR(:max_username_length) UNIQUE NOT NULL," +
+                    "password VARCHAR(:max_password_length) NOT NULL)")
+                    .replace(TABLE, TABLE_USERS)
+                    .replace(":max_username_length", APIManager.USERNAME_MAX_LENGTH + "")
+                    .replace(":max_password_length", APIManager.PASSWORD_MAX_LENGTH + "");
             con.createQuery(query).executeUpdate();
 
             query = ("CREATE TABLE IF NOT EXISTS :table" +
-                    "(url TEXT PRIMARY KEY NOT NULL," +
-                    "user_id INTEGER REFERENCES :table_users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL," +
-                    "raw BLOB NOT NULL," +
-                    "filename TEXT NOT NULL)")
-                    .replace(TABLE, TABLE_IMAGES)
-                    .replace(":table_users", TABLE_USERS);
+                    "(url VARCHAR(36) PRIMARY KEY NOT NULL," +
+                    "user_id INT UNSIGNED," +
+                    "raw LONGBLOB NOT NULL," +
+                    "filename VARCHAR(128) NOT NULL," +
+                    "FOREIGN KEY (user_id) REFERENCES :table_users(id) ON UPDATE CASCADE ON DELETE CASCADE)")
+                    .replace(":table_users", TABLE_USERS)
+                    .replace(TABLE, TABLE_IMAGES);
             con.createQuery(query).executeUpdate();
 
             query = ("CREATE TABLE IF NOT EXISTS :table" +
-                    "(oauth TEXT PRIMARY KEY NOT NULL," +
-                    "user_id INTEGER REFERENCES :table_users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL," +
-                    "privilege TEXT NOT NULL)")
-                    .replace(TABLE, TABLE_TOKENS)
-                    .replace("table_users", TABLE_USERS);
+                    "(oauth VARCHAR(36) PRIMARY KEY NOT NULL," +
+                    "user_id INT UNSIGNED," +
+                    "privilege VARCHAR(16) NOT NULL," +
+                    "FOREIGN KEY (user_id) REFERENCES :table_users(id) ON UPDATE CASCADE ON DELETE CASCADE)")
+                    .replace(":table_users", TABLE_USERS)
+                    .replace(TABLE, TABLE_TOKENS);
             con.createQuery(query).executeUpdate();
         }
     }

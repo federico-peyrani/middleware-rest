@@ -1,7 +1,6 @@
 package api;
 
 import api.authentication.*;
-import api.authentication.implementation.AuthenticationImpl;
 import api.authentication.sql.AuthenticationSQL;
 import api.resources.ResourceObj;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +32,11 @@ public class APIManager {
 
     // endregion
 
+    public static final int USERNAME_MIN_LENGTH = 8;
+    public static final int USERNAME_MAX_LENGTH = 24;
+    public static final int PASSWORD_MIN_LENGTH = 8;
+    public static final int PASSWORD_MAX_LENGTH = 24;
+
     public static final String REQUEST_PARAM_OAUTH = "oauth";
     public static final String REQUEST_PARAM_USER = "user";
     public static final String REQUEST_PARAM_PRIVILEGE = "privilege";
@@ -52,15 +56,8 @@ public class APIManager {
 
     public static void main(String[] args) {
 
-        final AuthenticationInterface authenticationInterface;
-
-        if (args.length != 0) {
-            // initialize the database and get the instance
-            AuthenticationSQL.init(args[0]);
-            authenticationInterface = AuthenticationSQL.connect();
-        } else {
-            authenticationInterface = AuthenticationImpl.getInstance();
-        }
+        AuthenticationSQL.init();
+        final AuthenticationInterface authenticationInterface = AuthenticationSQL.connect();
 
         instance.init(authenticationInterface);
     }
@@ -82,6 +79,30 @@ public class APIManager {
 
         if (username == null || password == null) {
             throw new ApiException("Username and password can't be empty");
+        }
+
+        if (username.length() <= USERNAME_MIN_LENGTH) {
+            throw new ApiException("Username can't be shorter than "
+                    + USERNAME_MIN_LENGTH
+                    + " characters");
+        }
+
+        if (username.length() >= USERNAME_MAX_LENGTH) {
+            throw new ApiException("Username can't be longer than "
+                    + USERNAME_MAX_LENGTH
+                    + " characters");
+        }
+
+        if (password.length() <= PASSWORD_MIN_LENGTH) {
+            throw new ApiException("Password can't be shorter than "
+                    + PASSWORD_MIN_LENGTH
+                    + " characters");
+        }
+
+        if (password.length() >= PASSWORD_MAX_LENGTH) {
+            throw new ApiException("Password can't be longer than "
+                    + PASSWORD_MAX_LENGTH
+                    + " characters");
         }
 
         @NotNull User user = userSupplier.get(username, password);
