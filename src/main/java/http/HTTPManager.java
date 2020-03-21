@@ -1,5 +1,6 @@
 package http;
 
+import api.APIManager;
 import http.engine.FreeMarkerEngine;
 import spark.Request;
 import spark.Response;
@@ -33,7 +34,8 @@ public class HTTPManager {
 
     private Object handlePageUser(Request request, Response response) {
 
-        if (request.session().isNew()) {
+        if (request.session().isNew()
+                || request.session().attribute(APIManager.REQUEST_PARAM_USER) == null) {
             response.redirect(PAGE_LOGIN);
             halt(302); // redirect
         }
