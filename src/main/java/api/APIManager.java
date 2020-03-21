@@ -1,8 +1,11 @@
 package api;
 
 import api.authentication.*;
+import api.authentication.implementation.AuthenticationImpl;
 import api.authentication.sql.AuthenticationSQL;
 import api.resources.ResourceObj;
+import common.Environment;
+
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -55,11 +58,26 @@ public class APIManager {
     }
 
     public static void main(String[] args) {
+    	final AuthenticationInterface authenticationInterface;
 
-        AuthenticationSQL.init();
-        final AuthenticationInterface authenticationInterface = AuthenticationSQL.connect();
+    	if (Environment.DATABASE_NAME.exists() ) {
+    		AuthenticationSQL.init();
+    		authenticationInterface = AuthenticationSQL.connect();
+    	} else {
+    		authenticationInterface = AuthenticationImpl.getInstance();
+    	}
 
-        instance.init(authenticationInterface);
+    	port(normalizePort());
+    	instance.init(authenticationInterface);
+    }
+    
+    private static int normalizePort() throws NumberFormatException {
+    	try {
+    		final String port = Environment.PORT.getValue();
+    		return Integer.parseInt(port);
+    	} catch (NumberFormatException e) {
+    		throw new NumberFormatException("Invalid port");
+    	}
     }
 
     // region Authenticate

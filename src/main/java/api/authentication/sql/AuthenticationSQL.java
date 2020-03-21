@@ -5,6 +5,8 @@ import api.authentication.AuthenticationException;
 import api.authentication.AuthenticationInterface;
 import api.authentication.Token;
 import api.authentication.User;
+import common.Environment;
+
 import org.jetbrains.annotations.NotNull;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
@@ -18,17 +20,28 @@ public final class AuthenticationSQL implements AuthenticationInterface {
     static final String TABLE_IMAGES = "images";
     static final String TABLE_TOKENS = "tokens";
     static final String TABLE = ":table";
+    
+    private static final String DATABASE_HOST = Environment.DATABASE_HOST.getValue();
+    private static final String DATABASE_PORT = Environment.DATABASE_PORT.getValue();
+    private static final String DATABASE_NAME = Environment.DATABASE_NAME.getValue();
+    private static final String DATABASE_USER = Environment.DATABASE_USER.getValue();
+    private static final String DATABASE_PASS = Environment.DATABASE_PASS.getValue();
 
     private static final AuthenticationSQL instance = new AuthenticationSQL();
     private static Sql2o sql2o;
 
-    private AuthenticationSQL() {
-    }
+    private AuthenticationSQL() {}
 
     public static void init() {
-        if (sql2o != null) throw new Sql2oException("Database already open");
-        sql2o = new Sql2o("jdbc:mysql://localhost:3306/hello_java", "demo_java", "1234");
-        createTables();
+    	if (sql2o != null) throw new Sql2oException("Database already open");
+    	final String url = createURL("mysql", DATABASE_HOST, DATABASE_PORT, DATABASE_NAME);
+    	sql2o = new Sql2o(url, DATABASE_USER, DATABASE_PASS);
+    	createTables();
+    }
+    
+    public static String createURL(String type, String host, String port, String name) {
+    	// URL example: jdbc:mysql://localhost:3306/myDB
+    	return "jdbc:" + type + "://" + host + ":" + port + "/" + name;
     }
 
     public static AuthenticationSQL connect() {

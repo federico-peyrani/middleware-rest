@@ -1,12 +1,16 @@
 package http;
 
 import api.APIManager;
+import api.authentication.AuthenticationInterface;
+import api.authentication.sql.AuthenticationSQL;
+import common.Environment;
 import http.engine.FreeMarkerEngine;
 import spark.Request;
 import spark.Response;
 
 import static spark.Spark.get;
 import static spark.Spark.halt;
+import static spark.Spark.port;
 
 /** Handles the requests to the static pages of the system. */
 public class HTTPManager {
@@ -23,6 +27,20 @@ public class HTTPManager {
 
     public static HTTPManager getInstance() {
         return instance;
+    }
+
+    public static void main(String[] args) {
+        port(normalizePort());
+        instance.init();
+    }
+    
+    private static int normalizePort() throws NumberFormatException {
+    	try {
+    		final String port = Environment.PORT.getValue();
+    		return Integer.parseInt(port);
+    	} catch (NumberFormatException e) {
+    		throw new NumberFormatException("Invalid port");
+    	}
     }
 
     private Object handlePageLogin(Request request, Response response) {
