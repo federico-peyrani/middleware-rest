@@ -1,16 +1,5 @@
 version: '3'
 services:
-  http:
-    build: .
-    image: middleware/rest:latest
-    hostname: http
-    environment:
-      - PORT=8080
-    ports:
-      - 8080:8080
-    depends_on:
-      - mariadb
-    command: ["http.HTTPManager"]
 
   api:
     build: .
@@ -27,7 +16,6 @@ services:
       - 3000:3000
     depends_on:
       - mariadb
-    command: ["api.APIManager"]
 
   mariadb:
     image: mariadb:10.3

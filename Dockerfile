@@ -24,4 +24,5 @@ ENV PORT 8080
 EXPOSE $PORT
 
 COPY entrypoint.sh /usr/local/bin
+RUN chmod 777 /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]

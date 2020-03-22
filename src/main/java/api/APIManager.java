@@ -1,11 +1,7 @@
 package api;
 
 import api.authentication.*;
-import api.authentication.implementation.AuthenticationImpl;
-import api.authentication.sql.AuthenticationSQL;
 import api.resources.ResourceObj;
-import common.Environment;
-
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -57,29 +53,6 @@ public class APIManager {
         return instance;
     }
 
-    public static void main(String[] args) {
-    	final AuthenticationInterface authenticationInterface;
-
-    	if (Environment.DATABASE_NAME.exists() ) {
-    		AuthenticationSQL.init();
-    		authenticationInterface = AuthenticationSQL.connect();
-    	} else {
-    		authenticationInterface = AuthenticationImpl.getInstance();
-    	}
-
-    	port(normalizePort());
-    	instance.init(authenticationInterface);
-    }
-    
-    private static int normalizePort() throws NumberFormatException {
-    	try {
-    		final String port = Environment.PORT.getValue();
-    		return Integer.parseInt(port);
-    	} catch (NumberFormatException e) {
-    		throw new NumberFormatException("Invalid port");
-    	}
-    }
-
     // region Authenticate
 
     /**
@@ -99,25 +72,25 @@ public class APIManager {
             throw new ApiException("Username and password can't be empty");
         }
 
-        if (username.length() <= USERNAME_MIN_LENGTH) {
+        if (username.length() < USERNAME_MIN_LENGTH) {
             throw new ApiException("Username can't be shorter than "
                     + USERNAME_MIN_LENGTH
                     + " characters");
         }
 
-        if (username.length() >= USERNAME_MAX_LENGTH) {
+        if (username.length() > USERNAME_MAX_LENGTH) {
             throw new ApiException("Username can't be longer than "
                     + USERNAME_MAX_LENGTH
                     + " characters");
         }
 
-        if (password.length() <= PASSWORD_MIN_LENGTH) {
+        if (password.length() < PASSWORD_MIN_LENGTH) {
             throw new ApiException("Password can't be shorter than "
                     + PASSWORD_MIN_LENGTH
                     + " characters");
         }
 
-        if (password.length() >= PASSWORD_MAX_LENGTH) {
+        if (password.length() > PASSWORD_MAX_LENGTH) {
             throw new ApiException("Password can't be longer than "
                     + PASSWORD_MAX_LENGTH
                     + " characters");
