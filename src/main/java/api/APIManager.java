@@ -3,6 +3,7 @@ package api;
 import api.authentication.*;
 import api.resources.ResourceObj;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
@@ -10,6 +11,8 @@ import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.http.Part;
 import java.io.IOException;
+import java.net.URL;
+import java.util.UUID;
 
 import static spark.Spark.*;
 
@@ -18,9 +21,9 @@ public class APIManager {
 
     // region Paths
 
+    public static final String API_CODE = "/api/code/:method";
+    public static final String API_TOKEN = "/api/token";
     public static final String API_AUTHENTICATE = "/api/authenticate";
-    public static final String API_LOGIN = "/api/authenticate/login";
-    public static final String API_SIGNUP = "/api/authenticate/signup";
     public static final String API_PROTECTED = "/api/protected/*";
     public static final String API_PROTECTED_USER = "/api/protected/user";
     public static final String API_PROTECTED_UPLOAD = "/api/protected/upload";
@@ -40,33 +43,21 @@ public class APIManager {
     public static final String REQUEST_PARAM_USER = "user";
     public static final String REQUEST_PARAM_PRIVILEGE = "privilege";
 
-    private static final APIManager instance = new APIManager();
+    private static final APIManager INSTANCE = new APIManager();
 
     private static final String APPLICATION_JSON = "application/json";
-
     private AuthenticationInterface authentication;
 
     private APIManager() {
     }
 
     public static APIManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     // region Authenticate
 
-    /**
-     * @param request      the {@link Request}
-     * @param response     the {@link Response}
-     * @param userSupplier
-     * @return
-     * @throws AuthenticationException
-     */
-    private Object authenticate(Request request, Response response, UserSupplier userSupplier)
-            throws ApiException {
-
-        String username = request.queryParams("username");
-        String password = request.queryParams("password");
+    private void validateSignupCredentials(String username, String password) throws ApiException {
 
         if (username == null || password == null) {
             throw new ApiException("Username and password can't be empty");
@@ -95,34 +86,78 @@ public class APIManager {
                     + PASSWORD_MAX_LENGTH
                     + " characters");
         }
-
-        @NotNull User user = userSupplier.get(username, password);
-        request.session(true);
-        request.session().attribute(REQUEST_PARAM_USER, user);
-
-        response.status(201);
-        response.type(APPLICATION_JSON);
-        return ResourceObj.build(User.class, user);
     }
 
     /**
-     * @param request  the {@link Request}
-     * @param response the {@link Response}
+     * Accessed via {@code POST /api/code/{method}/?username={username}&password={password}&client_id={client_id}}, if
+     * login is successful then returns a json-object that contains the URL
+     *
+     * @param request
+     * @param response
      * @return
-     * @throws AuthenticationException
+     * @throws ApiException
      */
-    private Object handleApiLogin(Request request, Response response) throws ApiException {
-        return authenticate(request, response, authentication::login);
+    private Object handleCode(Request request, Response response) throws ApiException {
+        String username = request.queryParams("username");
+        String password = request.queryParams("password");
+        String method = request.params("method");
+        if (method == null) {
+            halt(404); // not found
+            return response;
+        }
+
+        // retrieve the parameters from the session
+        URL redirectUri = request.session().attribute("redirect_uri");
+        if (redirectUri == null) {
+            throw new ApiException("Invalid request");
+        }
+
+        // validate the user credentials
+        @NotNull final User user;
+        switch (method) {
+            case "signup":
+                validateSignupCredentials(username, password);
+                user = authentication.signup(username, password);
+                break;
+            case "login":
+                user = authentication.login(username, password);
+                break;
+            default:
+                halt(404); // not found
+                return response;
+        }
+
+        // create a long-lived access token
+        @NotNull Token token = user.grant(Token.Privilege.DELETE);
+        String code = UUID.randomUUID().toString();
+        request.session().attribute(code, token);
+
+        // perform the callback using redirectUri
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("redirect_uri", redirectUri.toString() + "?code=" + code);
+        return jsonObject;
     }
 
     /**
-     * @param request  the {@link Request}
-     * @param response the {@link Response}
+     * Accessed via {@code POST /api/token?code={code}}, returns the token.
+     *
+     * @param request
+     * @param response
      * @return
-     * @throws AuthenticationException
+     * @throws ApiException
      */
-    private Object handleApiSignup(Request request, Response response) throws ApiException {
-        return authenticate(request, response, authentication::signup);
+    private Object handleToken(Request request, Response response) throws ApiException {
+        // look for the code in the request
+        String code = request.queryParams("code");
+        if (code == null) throw new ApiException("The request must include the code");
+
+        // match the code to the token that was generated
+        Token token = request.session().attribute(code);
+        if (token == null) throw new ApiException("No token was generated for code " + code);
+
+        // the session is no loner needed
+        request.session().invalidate();
+        return token;
     }
 
     // endregion
@@ -253,37 +288,6 @@ public class APIManager {
         return image.raw();
     }
 
-    /**
-     * @param request  the {@link Request}
-     * @param response the {@link Response}
-     * @return
-     * @throws AuthenticationException
-     */
-    private Object handleGrant(Request request, Response response) throws ApiException {
-
-        @NotNull Token.Privilege privilege = request.attribute(REQUEST_PARAM_PRIVILEGE);
-        @NotNull User user = request.attribute(REQUEST_PARAM_USER);
-
-        if (!privilege.enables(Token.Privilege.MASTER)) {
-            throw new AuthenticationException.OperationNotPermittedException(privilege);
-        }
-
-        String privilegeString = request.queryParams(REQUEST_PARAM_PRIVILEGE);
-        if (privilegeString == null)
-            throw new ApiException("Query param privilege is null");
-
-        try {
-            Token.Privilege grantedPrivilege = Token.Privilege.valueOf(privilegeString);
-            if (grantedPrivilege == Token.Privilege.MASTER)
-                throw new AuthenticationException.OperationNotPermittedException("Can't grant MASTER privilege");
-            response.status(200);
-            response.type(APPLICATION_JSON);
-            return ResourceObj.build(user.grant(grantedPrivilege));
-        } catch (IllegalArgumentException e) {
-            throw new ApiException(privilegeString + " is not a valid privilege");
-        }
-    }
-
     // endregion
 
     // region Exception
@@ -318,22 +322,14 @@ public class APIManager {
             return ResourceObj.build(AuthenticationInterface.class, authentication);
         });
 
-        post(API_LOGIN, this::handleApiLogin);
-        post(API_SIGNUP, this::handleApiSignup);
+        post(API_CODE, this::handleCode);
+        post(API_TOKEN, this::handleToken);
         get(API_PROTECTED_USER, this::handleApiUser);
         post(API_PROTECTED_UPLOAD, this::handleApiUpload);
         get(API_PROTECTED_IMAGES, this::handleApiImages);
         get(API_PROTECTED_IMAGE_URL, this::handleApiImage);
-        post(API_PROTECTED_GRANT, this::handleGrant);
 
         exception(ApiException.class, this::handleApiException);
-    }
-
-    @FunctionalInterface
-    private interface UserSupplier {
-
-        User get(String username, String password) throws AuthenticationException;
-
     }
 
 }

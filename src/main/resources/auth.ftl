@@ -55,6 +55,10 @@
 <div class="mdc-card card-content">
 
     <body class="mdc-typography">
+    <h1 id="message" class="mdc-typography--body1" style="color: #000000;">${message}</h1>
+    </body>
+
+    <body class="mdc-typography">
     <h1 id="error_message" class="mdc-typography--body2" style="color: #ff0000;"></h1>
     </body>
 
@@ -98,7 +102,7 @@
 
     const Strings = {
         create: (function () {
-            const regexp = /{([^{]+)}/g;
+            const regexp = /:([^:]+)/g;
             return function (str, o) {
                 return str.replace(regexp, function (ignore, key) {
                     return (key = o[key]) == null ? '' : key;
@@ -107,24 +111,30 @@
         })()
     };
 
-    let url;
-    fetch('${statics["api.APIManager"].API_AUTHENTICATE}')
-        .then(res => res.json())
-        .then(out => url = out._links);
+    function encodeQueryData(data) {
+        const ret = [];
+        for (let d in data)
+            ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]));
+        return ret.join('&');
+    }
 
     function authenticate(method) {
         let username = document.getElementById('username').value;
         let password = document.getElementById('password').value;
-        fetch(Strings.create(url[method].href, {username: username, password: password}), {method: "POST"})
+        const form = {username: username, password: password};
+        const queryString = encodeQueryData(form) // create the query string
+        const url = Strings.create("${statics["api.APIManager"].API_CODE}", {method: method})
+        fetch(url + "\?" + queryString, {method: "POST"})
             .then(res => res.json())
             .then(out => {
-
-                if (out._embedded.hasOwnProperty('status') && out._embedded.status == '${statics["api.ApiException"].STATUS}') {
+                if (out.hasOwnProperty('_embedded')
+                    && out._embedded.hasOwnProperty('status')
+                    && out._embedded.status == '${statics["api.ApiException"].STATUS}') {
                     // error
                     document.getElementById('error_message').innerHTML = out._embedded.message;
                 } else {
-                    // login or signup went fine
-                    window.location.pathname = '${statics["http.HTTPManager"].PAGE_PROTECTED_USER}';
+                    document.getElementById('message').innerHTML = 'Authentication went fine, please wait...';
+                    window.location = out.redirect_uri;
                 }
             });
     }
