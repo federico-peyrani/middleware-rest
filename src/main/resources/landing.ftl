@@ -18,15 +18,14 @@
         return ret.join('&');
     }
 
-    const form = {
-        "response_type": "code",
-        "client_id": "REST",
-        "redirect_uri": "${redirect_uri}"
-    };
-    const queryString = encodeQueryData(form)
-
     const token = localStorage.getItem("token");
-    if (token == null) window.location = "${statics["http.HTTPManager"].PAGE_AUTH}\?" + queryString
+    if (token == null) {
+        const form = {response_type: "code", client_id: "REST", redirect_uri: "${redirect_uri}"};
+        const queryString = encodeQueryData(form);
+        window.location = "${statics["http.HTTPManager"].PAGE_AUTH}\?" + queryString;
+    } else {
+        window.location = "${statics["http.HTTPManager"].PAGE_PROTECTED_USER}";
+    }
 
 </script>
 </html>

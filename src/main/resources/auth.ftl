@@ -58,40 +58,44 @@
     <h1 id="message" class="mdc-typography--body1" style="color: #000000;">${message}</h1>
     </body>
 
-    <body class="mdc-typography">
-    <h1 id="error_message" class="mdc-typography--body2" style="color: #ff0000;"></h1>
-    </body>
+    <div style="display: ${display}">
 
-    <form method="post">
+        <body class="mdc-typography">
+        <h1 id="error_message" class="mdc-typography--body2" style="color: #ff0000;"></h1>
+        </body>
 
-        <div class="mdc-text-field login-text-field">
-            <input type="text" id="username" name="username" class="mdc-text-field__input">
-            <label class="mdc-floating-label" for="username">Username</label>
-            <div class="mdc-line-ripple"></div>
+        <form method="post">
+
+            <div class="mdc-text-field login-text-field">
+                <input type="text" id="username" name="username" class="mdc-text-field__input">
+                <label class="mdc-floating-label" for="username">Username</label>
+                <div class="mdc-line-ripple"></div>
+            </div>
+
+            <br>
+
+            <div class="mdc-text-field login-text-field">
+                <input type="password" id="password" name="password" class="mdc-text-field__input" required minlength=8>
+                <label for="password" class="mdc-floating-label">Password</label>
+                <div class="mdc-line-ripple"></div>
+            </div>
+
+        </form>
+
+        <div>
+
+            <button class="mdc-button login-button" onclick="authenticate('login')">
+                <span class="mdc-button__ripple"></span>
+                Login
+            </button>
+
+            <button type="submit" onclick="authenticate('signup')"
+                    class="mdc-button mdc-button--raised login-button">
+                <span class="mdc-button__ripple"></span>
+                Signup
+            </button>
+
         </div>
-
-        <br>
-
-        <div class="mdc-text-field login-text-field">
-            <input type="password" id="password" name="password" class="mdc-text-field__input" required minlength=8>
-            <label for="password" class="mdc-floating-label">Password</label>
-            <div class="mdc-line-ripple"></div>
-        </div>
-
-    </form>
-
-    <div>
-
-        <button class="mdc-button login-button" onclick="authenticate('login')">
-            <span class="mdc-button__ripple"></span>
-            Login
-        </button>
-
-        <button type="submit" onclick="authenticate('signup')"
-                class="mdc-button mdc-button--raised login-button">
-            <span class="mdc-button__ripple"></span>
-            Signup
-        </button>
 
     </div>
 

@@ -76,7 +76,27 @@
     // check if there is a token in local storage else, redirect
     const token = localStorage.getItem("token");
     if (token == null) window.location = "${statics["http.HTTPManager"].PAGE_LANDING}";
-    // TODO test if token is valid
+
+    function fetchWithAuthentication(input, params) {
+        if (params == null) params = {};
+        params['headers'] = {'Authorization': 'Bearer ' + token};
+        let clone;
+        return fetch(input, params)
+            .then(res => {
+                clone = res.clone();
+                return res.json();
+            })
+            .then(out => {
+                if (out.hasOwnProperty('_embedded')
+                    && out._embedded.hasOwnProperty('status')
+                    && out._embedded.status == '${statics["api.ApiException"].STATUS}') {
+                    // remove the token
+                    localStorage.removeItem('token')
+                    window.location = "${statics["http.HTTPManager"].PAGE_LANDING}";
+                }
+                return clone;
+            });
+    }
 
     const Strings = {
         create: (function () {
@@ -104,20 +124,22 @@
         const img = document.createElement("img");
         li.className = 'mdc-image-list__item';
         img.className = 'mdc-image-list__image';
-        img.src = url + '\?oauth=' + token;
+        fetch(url, {headers: {'Authorization': 'Bearer ' + token}})
+            .then(res => res.blob())
+            .then(blob => img.src = URL.createObjectURL(blob));
         li.appendChild(img);
         imageList.appendChild(li);
     }
 
     let user; // used to store the user object when retrieved for the first time
-    fetch('${statics["api.APIManager"].API_PROTECTED_USER}\?oauth=' + token)
+    fetchWithAuthentication('${statics["api.APIManager"].API_PROTECTED_USER}')
         .then(res => res.json())
         .then(out => {
             user = out;
             document.getElementById('username').innerText = out._embedded.username;
             document.title = 'Personal Page - ' + out._embedded.username;
             const images = out._links.images.href;
-            fetch(images + '\?oauth=' + token)
+            fetchWithAuthentication(images)
                 .then(res => res.json())
                 .then(out => {
                     for (const image of out._embedded.images) {
@@ -130,7 +152,7 @@
         let img = document.getElementById("img").files[0];
         let formData = new FormData();
         formData.append("img", img);
-        fetch(user._links.upload.href + '\?oauth=' + token, {method: "POST", body: formData})
+        fetchWithAuthentication(user._links.upload.href, {method: "POST", body: formData})
             .then(res => res.json())
             .then(image => {
                 appendImage(Strings.create(image._links.self.href, {id: image._embedded.id}));

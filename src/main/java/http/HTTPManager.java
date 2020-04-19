@@ -46,14 +46,17 @@ public class HTTPManager {
 
         if (responseType == null || clientId == null || redirectUri == null) {
             model.put("message", "Invalid request");
+            model.put("display", "none"); // hide the login form if the request is malformed
         } else try {
             URL uri = new URL(redirectUri);
             request.session(true);
             request.session().attribute("redirect_uri", uri);
             request.session().attribute("client_id", clientId);
             model.put("message", "You're about to give " + clientId + " access to your account");
+            model.put("display", "block"); // show the login form if the request is valid
         } catch (MalformedURLException exception) {
             model.put("message", "Invalid URL format");
+            model.put("display", "none"); // hide the login form if the request is malformed
         }
 
         return engine.render(model, "auth.ftl");

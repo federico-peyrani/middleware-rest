@@ -173,21 +173,20 @@ public class APIManager {
      *                                 authentication token
      */
     private void handleProtected(Request request, Response response) throws AuthenticationException {
-
-        @NotNull final User user;
-
-        if (request.session().attribute("user") == null) {
-            String stringToken = request.queryParams(REQUEST_PARAM_OAUTH);
-            if (stringToken == null) throw new AuthenticationException("No oauth token provided");
-            Token token = authentication.fromString(stringToken);
-            user = token.user;
-            request.attribute(REQUEST_PARAM_PRIVILEGE, token.privilege);
-        } else {
-            user = request.session().attribute(REQUEST_PARAM_USER);
-            request.attribute(REQUEST_PARAM_PRIVILEGE, Token.Privilege.MASTER);
+        String authorization = request.headers("Authorization");
+        if (authorization == null) {
+            throw new AuthenticationException("Malformed token request");
+        }
+        String[] array = authorization.split(" ", 2);
+        if (array.length < 2 || !array[0].equals("Bearer")) {
+            throw new AuthenticationException("Malformed token request");
         }
 
+        String stringToken = array[1];
+        @NotNull final Token token = authentication.fromString(stringToken);
+        @NotNull final User user = token.user;
         request.attribute(REQUEST_PARAM_USER, user);
+        request.attribute(REQUEST_PARAM_PRIVILEGE, token.privilege);
     }
 
     /**
@@ -197,7 +196,6 @@ public class APIManager {
      * @throws AuthenticationException
      */
     private Object handleApiUser(Request request, Response response) throws AuthenticationException {
-
         @NotNull Token.Privilege privilege = request.attribute(REQUEST_PARAM_PRIVILEGE);
         @NotNull User user = request.attribute(REQUEST_PARAM_USER);
 
@@ -245,7 +243,6 @@ public class APIManager {
      * @throws AuthenticationException
      */
     private Object handleApiImages(Request request, Response response) throws AuthenticationException {
-
         @NotNull Token.Privilege privilege = request.attribute(REQUEST_PARAM_PRIVILEGE);
         @NotNull User user = request.attribute(REQUEST_PARAM_USER);
 
@@ -265,7 +262,6 @@ public class APIManager {
      * @throws AuthenticationException
      */
     private Object handleApiImage(Request request, Response response) throws ApiException {
-
         @NotNull Token.Privilege privilege = request.attribute(REQUEST_PARAM_PRIVILEGE);
         @NotNull User user = request.attribute(REQUEST_PARAM_USER);
 
