@@ -12,11 +12,6 @@ about users and uploaded images is lost once the JVM is stopped.
 
 Connect to <http://localhost:4567/login> with a browser to test the functionalities of the system.
 
-### Launch modules separately
-
-Both modules (HTTP server and API server) can be launched independently of one another by using the respective `main`
-methods, as they do not strictly rely on one another and can effectively run on separate JVMs.
-
 ## SQL Database
 
 The application will automatically create the necessary tables upon startup, so no further action is needed beside the
