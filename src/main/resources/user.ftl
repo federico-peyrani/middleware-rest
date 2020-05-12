@@ -14,7 +14,7 @@
     <style>
 
         body {
-            display: flex;
+            display: none;
             margin: 0;
             height: 100vh;
         }
@@ -135,6 +135,7 @@
     fetchWithAuthentication('${statics["api.APIManager"].API_PROTECTED_USER}')
         .then(res => res.json())
         .then(out => {
+            document.body.style['display'] = 'flex';
             user = out;
             document.getElementById('username').innerText = out._embedded.username;
             document.title = 'Personal Page - ' + out._embedded.username;
