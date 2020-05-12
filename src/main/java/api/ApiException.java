@@ -9,7 +9,7 @@ public class ApiException extends Exception {
     public static final String STATUS = "ERROR";
 
     @Resource.Property(key = "request")
-    private String route = APIManager.API_AUTHENTICATE;
+    private String route;
 
     public ApiException(String message) {
         super(message);

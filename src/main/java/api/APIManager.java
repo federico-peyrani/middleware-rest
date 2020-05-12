@@ -1,8 +1,13 @@
 package api;
 
-import api.authentication.*;
+import api.authentication.AuthenticationException;
+import api.authentication.AuthenticationInterface;
+import api.authentication.Image;
+import api.authentication.Token;
+import api.authentication.User;
 import api.resources.ResourceObj;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
@@ -12,9 +17,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import static spark.Spark.*;
+import static spark.Spark.before;
+import static spark.Spark.exception;
+import static spark.Spark.get;
+import static spark.Spark.halt;
+import static spark.Spark.post;
 
 /** Handles the requests to the API endpoints. */
 public class APIManager {
@@ -23,13 +34,12 @@ public class APIManager {
 
     public static final String API_CODE = "/api/code/:method";
     public static final String API_TOKEN = "/api/token";
-    public static final String API_AUTHENTICATE = "/api/authenticate";
     public static final String API_PROTECTED = "/api/protected/*";
     public static final String API_PROTECTED_USER = "/api/protected/user";
     public static final String API_PROTECTED_UPLOAD = "/api/protected/upload";
     public static final String API_PROTECTED_IMAGES = "/api/protected/images";
     public static final String API_PROTECTED_IMAGE = "/api/protected/image";
-    public static final String API_PROTECTED_IMAGE_URL = API_PROTECTED_IMAGE + "/:image";
+    public static final String API_PROTECTED_IMAGE_URL = "/api/protected/image/:image";
     public static final String API_PROTECTED_GRANT = "/api/protected/grant";
 
     // endregion
@@ -39,13 +49,15 @@ public class APIManager {
     public static final int PASSWORD_MIN_LENGTH = 8;
     public static final int PASSWORD_MAX_LENGTH = 24;
 
-    public static final String REQUEST_PARAM_OAUTH = "oauth";
     public static final String REQUEST_PARAM_USER = "user";
     public static final String REQUEST_PARAM_PRIVILEGE = "privilege";
 
     private static final APIManager INSTANCE = new APIManager();
 
     private static final String APPLICATION_JSON = "application/json";
+
+    private final Map<String, Token> codeToToken = new HashMap<>();
+
     private AuthenticationInterface authentication;
 
     private APIManager() {
@@ -56,6 +68,11 @@ public class APIManager {
     }
 
     // region Authenticate
+
+    @Nullable
+    public Token getTokenFromCode(String code) {
+        return codeToToken.get(code);
+    }
 
     private void validateSignupCredentials(String username, String password) throws ApiException {
 
@@ -90,7 +107,8 @@ public class APIManager {
 
     /**
      * Accessed via {@code POST /api/code/{method}/?username={username}&password={password}&client_id={client_id}}, if
-     * login is successful then returns a json-object that contains the URL
+     * login is successful then returns a json-object that contains the URL. This endpoint is supposed to be used only
+     * "internally" via the authentication page, as it uses cookies to track the requests.
      *
      * @param request
      * @param response
@@ -130,7 +148,8 @@ public class APIManager {
         // create a long-lived access token
         @NotNull Token token = user.grant(Token.Privilege.DELETE);
         String code = UUID.randomUUID().toString();
-        request.session().attribute(code, token);
+        codeToToken.put(code, token);
+        request.session().invalidate();
 
         // perform the callback using redirectUri
         JSONObject jsonObject = new JSONObject();
@@ -152,11 +171,11 @@ public class APIManager {
         if (code == null) throw new ApiException("The request must include the code");
 
         // match the code to the token that was generated
-        Token token = request.session().attribute(code);
+        Token token = getTokenFromCode(code);
         if (token == null) throw new ApiException("No token was generated for code " + code);
 
-        // the session is no loner needed
-        request.session().invalidate();
+        // the session is no longer needed
+        codeToToken.remove(code);
         return token;
     }
 
@@ -296,8 +315,7 @@ public class APIManager {
      * @param request   the {@link Request}
      * @param response  the {@link Response}
      */
-    private void handleApiException(ApiException exception,
-                                    Request request, Response response) {
+    private void handleApiException(ApiException exception, Request request, Response response) {
         exception.setRoute(request.uri());
         response.status(201);
         response.type(APPLICATION_JSON);
@@ -311,12 +329,6 @@ public class APIManager {
         this.authentication = authenticationInterface;
 
         before(API_PROTECTED, this::handleProtected);
-
-        get(API_AUTHENTICATE, (request, response) -> {
-            response.status(201);
-            response.type(APPLICATION_JSON);
-            return ResourceObj.build(AuthenticationInterface.class, authentication);
-        });
 
         post(API_CODE, this::handleCode);
         post(API_TOKEN, this::handleToken);

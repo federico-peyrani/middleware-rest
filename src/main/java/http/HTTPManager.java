@@ -1,5 +1,6 @@
 package http;
 
+import api.APIManager;
 import api.authentication.Token;
 import http.engine.FreeMarkerEngine;
 import spark.Request;
@@ -10,6 +11,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import static spark.Spark.after;
 import static spark.Spark.get;
 
 /** Handles the requests to the static pages of the system. */
@@ -23,6 +25,7 @@ public class HTTPManager {
     private static final HTTPManager INSTANCE = new HTTPManager();
 
     private final FreeMarkerEngine engine = new FreeMarkerEngine(FreeMarkerEngine.createDefaultConfiguration());
+    private final APIManager apiManager = APIManager.getInstance();
 
     private HTTPManager() {
     }
@@ -33,7 +36,7 @@ public class HTTPManager {
 
     private Object handlePageLanding(Request request, Response response) {
         Map<String, Object> model = new HashMap<>();
-        model.put("redirect_uri", request.url() + PAGE_AUTH_CALLBACK);
+        model.put("redirect_uri", request.url().replaceFirst("/$", "") + PAGE_AUTH_CALLBACK);
         return engine.render(model, "landing.ftl");
     }
 
@@ -64,10 +67,10 @@ public class HTTPManager {
 
     private Object handlePageAuthCallback(Request request, Response response) {
         String code = request.queryParams("code");
-        if (code == null) return "Invalid request";
+        if (code == null) return "Invalid request, no query params for \"code\".";
 
-        Token token = request.session().attribute(code);
-        if (token == null) return "Invalid request";
+        Token token = apiManager.getTokenFromCode(code);
+        if (token == null) return "Invalid request, the code was not mapped to any token.";
 
         Map<String, Object> model = new HashMap<>();
         model.put("token", token.oauth);
@@ -81,6 +84,9 @@ public class HTTPManager {
     }
 
     public void init() {
+        // enable compression
+        after((request, response) -> response.header("Content-Encoding", "gzip"));
+
         get(PAGE_LANDING, this::handlePageLanding);
         get(PAGE_PROTECTED_USER, this::handlePageUser);
         get(PAGE_AUTH, this::handlePageAuth);
