@@ -44,20 +44,24 @@ public class HTTPManager {
         String responseType = request.queryParams("response_type");
         String clientId = request.queryParams("client_id");
         String redirectUri = request.queryParams("redirect_uri");
+        String privilege = request.queryParams("privilege");
 
         Map<String, Object> model = new HashMap<>();
 
-        if (responseType == null || clientId == null || redirectUri == null) {
+        if (responseType == null || clientId == null || redirectUri == null || privilege == null) {
             model.put("message", "Invalid request");
             model.put("display", "none"); // hide the login form if the request is malformed
         } else try {
             URL uri = new URL(redirectUri);
+            Token.Privilege.valueOf(privilege);
             request.session(true);
             request.session().attribute("redirect_uri", uri);
             request.session().attribute("client_id", clientId);
-            model.put("message", "You're about to give " + clientId + " access to your account");
+            request.session().attribute("privilege", Token.Privilege.valueOf(privilege));
+            model.put("message", "You're about to give " + clientId + " the following permissions:");
+            model.put("privileges", Token.Privilege.valueOf(privilege).getDescription());
             model.put("display", "block"); // show the login form if the request is valid
-        } catch (MalformedURLException exception) {
+        } catch (MalformedURLException | IllegalArgumentException exception) {
             model.put("message", "Invalid URL format");
             model.put("display", "none"); // hide the login form if the request is malformed
         }

@@ -58,6 +58,14 @@
     <h1 id="message" class="mdc-typography--body1" style="color: #000000;">${message}</h1>
     </body>
 
+    <#if privileges??>
+        <ul style="width: 100%">
+            <#list privileges as privilege>
+                <li id="message" class="mdc-typography--body1" style="color: #000000;">${privilege}</li>
+            </#list>
+        </ul>
+    </#if>
+
     <div style="display: ${display}">
 
         <body class="mdc-typography">

@@ -126,7 +126,8 @@ public class APIManager {
 
         // retrieve the parameters from the session
         URL redirectUri = request.session().attribute("redirect_uri");
-        if (redirectUri == null) {
+        Token.Privilege privilege = request.session().attribute("privilege");
+        if (redirectUri == null || privilege == null) {
             throw new ApiException("Invalid request");
         }
 
@@ -146,7 +147,7 @@ public class APIManager {
         }
 
         // create a long-lived access token
-        @NotNull Token token = user.grant(Token.Privilege.DELETE);
+        @NotNull Token token = user.grant(privilege);
         String code = UUID.randomUUID().toString();
         codeToToken.put(code, token);
         request.session().invalidate();

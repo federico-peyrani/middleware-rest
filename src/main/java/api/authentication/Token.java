@@ -48,25 +48,32 @@ public class Token {
     public enum Privilege {
 
         /** Permission to get infos about the user. */
-        INFO,
+        INFO("See your username"),
         /** Permission to get access to the pictures of the user. */
-        READ(INFO),
+        READ("See your pictures", INFO),
         /** Permission to upload new pictures to the user's space. */
-        UPLOAD(INFO, READ),
-        /** Permission to delete pictures from the user's space. */
-        DELETE(INFO, READ, UPLOAD),
-        /** Permission to carry out every operation on the user's space, as well as creating new access tokens. */
-        MASTER(INFO, READ, UPLOAD, DELETE);
+        UPLOAD("Upload new pictures to your space", INFO, READ);
 
+        private final String description;
         private final Privilege[] included;
 
-        Privilege(Privilege... includes) {
-            included = includes;
+        Privilege(String description, Privilege... includes) {
+            this.description = description;
+            this.included = includes;
         }
 
         public boolean enables(@NotNull Privilege privilege) {
             if (this == privilege) return true;
             return Arrays.asList(included).contains(privilege);
+        }
+
+        public String[] getDescription() {
+            String[] descriptions = new String[included.length + 1];
+            for (int i = 0; i < descriptions.length - 1; i++) {
+                descriptions[i] = included[i].description;
+            }
+            descriptions[descriptions.length - 1] = this.description;
+            return descriptions;
         }
 
     }
