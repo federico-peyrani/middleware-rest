@@ -74,7 +74,7 @@
 
         <form method="post">
 
-            <div class="mdc-text-field login-text-field">
+            <div class="mdc-text-field login-text-field mdc-text-field--outlined">
                 <input type="text" id="username" name="username" class="mdc-text-field__input">
                 <label class="mdc-floating-label" for="username">Username</label>
                 <div class="mdc-line-ripple"></div>
@@ -82,7 +82,7 @@
 
             <br>
 
-            <div class="mdc-text-field login-text-field">
+            <div class="mdc-text-field login-text-field mdc-text-field--outlined">
                 <input type="password" id="password" name="password" class="mdc-text-field__input" required minlength=8>
                 <label for="password" class="mdc-floating-label">Password</label>
                 <div class="mdc-line-ripple"></div>
@@ -152,7 +152,7 @@
     }
 
     const fields = document.querySelectorAll('.mdc-text-field');
-    fields.forEach(textfield => mdc.textField.MDCTextField.attachTo(textfield));
+    fields.forEach(textfield => new mdc.textField.MDCTextField(textfield));
 
 </script>
 </html>
