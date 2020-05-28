@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static spark.Spark.before;
 import static spark.Spark.exception;
@@ -43,10 +44,8 @@ public class APIManager {
 
     // endregion
 
-    public static final int USERNAME_MIN_LENGTH = 8;
     public static final int USERNAME_MAX_LENGTH = 24;
-    public static final int PASSWORD_MIN_LENGTH = 8;
-    public static final int PASSWORD_MAX_LENGTH = 24;
+    public static final int PASSWORD_MAX_LENGTH = 32;
 
     public static final String REQUEST_PARAM_USER = "user";
     public static final String REQUEST_PARAM_PRIVILEGE = "privilege";
@@ -54,6 +53,9 @@ public class APIManager {
     private static final APIManager INSTANCE = new APIManager();
 
     private static final String APPLICATION_JSON = "application/json";
+
+    private final Pattern usernamePattern = Pattern.compile("^[a-zA-Z0-9_\\-]{6,24}$");
+    private final Pattern passwordPattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}\\[\\]:;<>,?/~_+-=|\\\\]).{8,32}$");
 
     private final Map<String, Token> codeToToken = new HashMap<>();
 
@@ -69,33 +71,21 @@ public class APIManager {
     // region Authenticate
 
     private void validateSignupCredentials(String username, String password) throws ApiException {
-
         if (username == null || password == null) {
             throw new ApiException("Username and password can't be empty");
         }
 
-        if (username.length() < USERNAME_MIN_LENGTH) {
-            throw new ApiException("Username can't be shorter than "
-                    + USERNAME_MIN_LENGTH
-                    + " characters");
+        if (!usernamePattern.matcher(username).matches()) {
+            throw new ApiException("Username must be between 6 and 24 characters long, and contain only " +
+                    "letters, numbers and \"-\" or \"_\"");
         }
 
-        if (username.length() > USERNAME_MAX_LENGTH) {
-            throw new ApiException("Username can't be longer than "
-                    + USERNAME_MAX_LENGTH
-                    + " characters");
-        }
-
-        if (password.length() < PASSWORD_MIN_LENGTH) {
-            throw new ApiException("Password can't be shorter than "
-                    + PASSWORD_MIN_LENGTH
-                    + " characters");
-        }
-
-        if (password.length() > PASSWORD_MAX_LENGTH) {
-            throw new ApiException("Password can't be longer than "
-                    + PASSWORD_MAX_LENGTH
-                    + " characters");
+        if (!passwordPattern.matcher(password).matches()) {
+            throw new ApiException("Password must be between 8 and 32 characters long, and contain at least " +
+                    "one lowercase letter, " +
+                    "one uppercase letter, " +
+                    "one digit and " +
+                    "one special character");
         }
     }
 

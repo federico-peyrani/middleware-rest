@@ -5,10 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
     <title>Login</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
 
     <style>
 
@@ -66,11 +66,11 @@
         </ul>
     </#if>
 
-    <div style="display: ${display}">
-
-        <body class="mdc-typography">
+    <div class="mdc-typography" style="max-width: 400px; word-break: break-word;">
         <h1 id="error_message" class="mdc-typography--body2" style="color: #ff0000;"></h1>
-        </body>
+    </div>
+
+    <div style="display: ${display}">
 
         <form method="post">
 
