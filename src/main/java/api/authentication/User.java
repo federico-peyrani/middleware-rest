@@ -27,8 +27,6 @@ public interface User {
      * @throws AuthenticationException
      */
     @NotNull
-    @Resource.Method(key = "grant",
-            href = APIManager.API_PROTECTED_GRANT + "?" + APIManager.REQUEST_PARAM_PRIVILEGE + "={privilege}")
     Token grant(Token.Privilege privilege) throws AuthenticationException;
 
 }

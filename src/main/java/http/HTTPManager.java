@@ -1,6 +1,5 @@
 package http;
 
-import api.APIManager;
 import api.authentication.Token;
 import http.engine.FreeMarkerEngine;
 import spark.Request;
@@ -25,7 +24,6 @@ public class HTTPManager {
     private static final HTTPManager INSTANCE = new HTTPManager();
 
     private final FreeMarkerEngine engine = new FreeMarkerEngine(FreeMarkerEngine.createDefaultConfiguration());
-    private final APIManager apiManager = APIManager.getInstance();
 
     private HTTPManager() {
     }
@@ -73,11 +71,8 @@ public class HTTPManager {
         String code = request.queryParams("code");
         if (code == null) return "Invalid request, no query params for \"code\".";
 
-        Token token = apiManager.getTokenFromCode(code);
-        if (token == null) return "Invalid request, the code was not mapped to any token.";
-
         Map<String, Object> model = new HashMap<>();
-        model.put("token", token.oauth);
+        model.put("code", code);
         return engine.render(model, "auth_callback.ftl");
     }
 

@@ -20,7 +20,7 @@
 
     const token = localStorage.getItem("token");
     if (token == null) {
-        const form = {response_type: "code", client_id: "REST", redirect_uri: "${redirect_uri}", privilege: "upload"};
+        const form = {response_type: "code", client_id: "REST", redirect_uri: "${redirect_uri}", privilege: "UPLOAD"};
         const queryString = encodeQueryData(form);
         window.location = "${statics["http.HTTPManager"].PAGE_AUTH}\?" + queryString;
     } else {

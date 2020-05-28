@@ -7,7 +7,6 @@ import api.authentication.Token;
 import api.authentication.User;
 import api.resources.ResourceObj;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
@@ -68,11 +67,6 @@ public class APIManager {
     }
 
     // region Authenticate
-
-    @Nullable
-    public Token getTokenFromCode(String code) {
-        return codeToToken.get(code);
-    }
 
     private void validateSignupCredentials(String username, String password) throws ApiException {
 
@@ -172,12 +166,14 @@ public class APIManager {
         if (code == null) throw new ApiException("The request must include the code");
 
         // match the code to the token that was generated
-        Token token = getTokenFromCode(code);
+        Token token = codeToToken.get(code);
         if (token == null) throw new ApiException("No token was generated for code " + code);
 
         // the session is no longer needed
         codeToToken.remove(code);
-        return token;
+        response.status(201);
+        response.type(APPLICATION_JSON);
+        return ResourceObj.build(token);
     }
 
     // endregion
