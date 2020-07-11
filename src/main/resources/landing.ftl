@@ -6,17 +6,12 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
     <title>Landing</title>
 
+    <script src="/script.js"></script>
+
 </head>
 
 <body></body>
 <script type="text/javascript">
-
-    function encodeQueryData(data) {
-        const ret = [];
-        for (let d in data)
-            ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]));
-        return ret.join('&');
-    }
 
     const token = localStorage.getItem("token");
     if (token == null) {

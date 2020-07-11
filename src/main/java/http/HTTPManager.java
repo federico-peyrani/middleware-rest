@@ -12,6 +12,7 @@ import java.util.Map;
 
 import static spark.Spark.after;
 import static spark.Spark.get;
+import static spark.Spark.staticFileLocation;
 
 /** Handles the requests to the static pages of the system. */
 public class HTTPManager {
@@ -83,6 +84,9 @@ public class HTTPManager {
     }
 
     public void init() {
+
+        staticFileLocation("/public");
+
         // enable compression
         after((request, response) -> response.header("Content-Encoding", "gzip"));
 

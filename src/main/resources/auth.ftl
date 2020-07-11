@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
 
+    <script src="/script.js"></script>
+
     <style>
 
         html {
@@ -111,24 +113,6 @@
 
 </body>
 <script type="text/javascript">
-
-    const Strings = {
-        create: (function () {
-            const regexp = /:([^:]+)/g;
-            return function (str, o) {
-                return str.replace(regexp, function (ignore, key) {
-                    return (key = o[key]) == null ? '' : key;
-                });
-            }
-        })()
-    };
-
-    function encodeQueryData(data) {
-        const ret = [];
-        for (let d in data)
-            ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]));
-        return ret.join('&');
-    }
 
     function authenticate(method) {
         let username = document.getElementById('username').value;

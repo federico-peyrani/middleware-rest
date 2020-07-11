@@ -11,6 +11,8 @@
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
     <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
 
+    <script src="/script.js"></script>
+
     <style>
 
         body {
@@ -97,17 +99,6 @@
                 return clone;
             });
     }
-
-    const Strings = {
-        create: (function () {
-            const regexp = /{([^{]+)}/g;
-            return function (str, o) {
-                return str.replace(regexp, function (ignore, key) {
-                    return (key = o[key]) == null ? '' : key;
-                });
-            }
-        })()
-    };
 
     const imageList = document.getElementById("image-list");
 
