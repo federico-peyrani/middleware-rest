@@ -38,6 +38,13 @@
             margin: 0 0 16px;
         }
 
+        .app-fab--absolute {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+        }
+
+
     </style>
 
 </head>
@@ -59,12 +66,12 @@
 
 <div class="mdc-top-app-bar--fixed-adjust">
 
-    <form enctype="multipart/form-data">
-        <label for="img">Select image:</label>
-        <input type="file" id="img" name="img" accept="image/*">
-    </form>
+    <input type="file" id="img" style="display: none" accept="image/*">
 
-    <button onclick="onSubmit()"></button>
+    <button class="mdc-fab app-fab--absolute" aria-label="Favorite" onclick="onFabClick();">
+        <div class="mdc-fab__ripple"></div>
+        <span class="mdc-fab__icon material-icons">publish</span>
+    </button>
 
     <div id="container">
         <ul id="image-list" class="mdc-image-list mdc-image-list--masonry-js"></ul>
@@ -140,7 +147,11 @@
                 });
         });
 
-    function onSubmit() {
+    function onFabClick() {
+        document.getElementById("img").click();
+    }
+
+    document.getElementById("img").onchange = function () {
         let img = document.getElementById("img").files[0];
         let formData = new FormData();
         formData.append("img", img);
