@@ -33,6 +33,13 @@ public class HTTPManager {
         return INSTANCE;
     }
 
+    private static String sanitize(String string) {
+        return string
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
     private Object handlePageLanding(Request request, Response response) {
         Map<String, Object> model = new HashMap<>();
         model.put("redirect_uri", request.url().replaceFirst("/$", "") + PAGE_AUTH_CALLBACK);
@@ -41,7 +48,7 @@ public class HTTPManager {
 
     private Object handlePageAuth(Request request, Response response) {
         String responseType = request.queryParams("response_type");
-        String clientId = request.queryParams("client_id");
+        String clientId = sanitize(request.queryParams("client_id"));
         String redirectUri = request.queryParams("redirect_uri");
         String privilege = request.queryParams("privilege");
 
